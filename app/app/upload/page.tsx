@@ -1,0 +1,235 @@
+"use client"
+
+import { useState } from "react"
+import { Upload, FileText, CheckCircle2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { useRouter } from "next/navigation"
+
+/**
+ * Upload page with file dropzone and mock upload simulation
+ */
+export default function UploadPage() {
+  const router = useRouter()
+  const [isDragging, setIsDragging] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [uploadedFileName, setUploadedFileName] = useState("")
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = () => {
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const files = Array.from(e.dataTransfer.files)
+    if (files.length > 0) {
+      handleFileUpload(files[0])
+    }
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (files && files.length > 0) {
+      handleFileUpload(files[0])
+    }
+  }
+
+  const handleFileUpload = (file: File) => {
+    setUploadedFileName(file.name)
+    setIsUploading(true)
+    setUploadProgress(0)
+
+    // Simulate upload progress
+    const interval = setInterval(() => {
+      setUploadProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval)
+          setIsUploading(false)
+          setShowSuccess(true)
+          return 100
+        }
+        return prev + 10
+      })
+    }, 300)
+  }
+
+  const handleSuccessClose = () => {
+    setShowSuccess(false)
+    setUploadProgress(0)
+    router.push("/app/receipts")
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Upload Receipt</h1>
+        <p className="text-muted-foreground">
+          Upload receipt images for AI-powered processing
+        </p>
+      </div>
+
+      {/* Upload Card */}
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>Upload Your Receipt</CardTitle>
+          <CardDescription>
+            Drag and drop your receipt image or click to browse
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`
+              relative border-2 border-dashed rounded-lg p-12 text-center transition-colors
+              ${
+                isDragging
+                  ? "border-primary bg-primary/5"
+                  : "border-muted-foreground/25 hover:border-muted-foreground/50"
+              }
+              ${isUploading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+            `}
+          >
+            <input
+              type="file"
+              accept="image/*,.pdf"
+              onChange={handleFileSelect}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              disabled={isUploading}
+            />
+
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Upload className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">
+                  {isDragging
+                    ? "Drop your file here"
+                    : "Drop your receipt here"}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  or click to browse from your device
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Supports: JPG, PNG, PDF (Max 10MB)
+                </p>
+              </div>
+
+              {!isUploading && (
+                <Button variant="outline" className="mt-4">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Select File
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Upload Progress */}
+          {isUploading && (
+            <div className="mt-6 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  Uploading {uploadedFileName}...
+                </span>
+                <span className="font-medium">{uploadProgress}%</span>
+              </div>
+              <Progress value={uploadProgress} className="h-2" />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Recent Uploads */}
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>Recent Uploads</CardTitle>
+          <CardDescription>Your recently processed receipts</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {[
+              { name: "receipt-2025-03-14.jpg", status: "Completed", time: "2 hours ago" },
+              { name: "grocery-receipt.pdf", status: "Completed", time: "1 day ago" },
+              { name: "parking-ticket.jpg", status: "Processing", time: "2 days ago" },
+            ].map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 rounded-lg border"
+              >
+                <div className="flex items-center gap-3">
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">{item.name}</p>
+                    <p className="text-xs text-muted-foreground">{item.time}</p>
+                  </div>
+                </div>
+                <span
+                  className={`text-xs px-2 py-1 rounded-full ${
+                    item.status === "Completed"
+                      ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                      : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
+                  }`}
+                >
+                  {item.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+            <DialogTitle className="text-center">Upload Successful!</DialogTitle>
+            <DialogDescription className="text-center">
+              Your receipt has been uploaded and is being processed by our AI.
+              You'll be able to view the results shortly.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setShowSuccess(false)}>
+              Upload Another
+            </Button>
+            <Button onClick={handleSuccessClose}>View Receipts</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
