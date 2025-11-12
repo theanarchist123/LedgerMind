@@ -19,32 +19,59 @@ import { Separator } from "@/components/ui/separator"
 import { authClient } from "@/lib/auth-client"
 
 /**
- * Login page with Better Auth integration
- * Users can sign in with email and password
+ * Signup page with Better Auth integration
+ * Users can create a new account with name, email, and password
  */
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter()
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+
+    // Validate passwords match
+    if (password !== confirmPassword) {
+      setError("Passwords do not match")
+      return
+    }
+
+    // Validate password length
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long")
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      const result = await authClient.signIn.email({
+      const result = await authClient.signUp.email({
         email,
         password,
+        name,
       })
 
       if (result.error) {
-        setError(result.error.message || "Invalid email or password")
+        setError(result.error.message || "Failed to create account")
       } else {
-        router.push("/app/dashboard")
-        router.refresh()
+        // Auto sign in after signup
+        const signInResult = await authClient.signIn.email({
+          email,
+          password,
+        })
+
+        if (signInResult.error) {
+          setError("Account created! Please sign in.")
+          setTimeout(() => router.push("/auth/login"), 2000)
+        } else {
+          router.push("/app/dashboard")
+          router.refresh()
+        }
       }
     } catch (err) {
       setError("An error occurred. Please try again.")
@@ -68,19 +95,31 @@ export default function LoginPage() {
               />
             </div>
           </div>
-          <CardTitle className="text-2xl text-center">Welcome to LedgerMind</CardTitle>
+          <CardTitle className="text-2xl text-center">Create an Account</CardTitle>
           <CardDescription className="text-center">
-            Enter your credentials to access your account
+            Enter your information to get started with LedgerMind
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="John Doe"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="demo@ledgermind.com"
+                placeholder="john@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -92,11 +131,25 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="Enter your password (min 8 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
+                minLength={8}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Re-enter your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                disabled={isLoading}
+                minLength={8}
               />
             </div>
             {error && (
@@ -104,18 +157,10 @@ export default function LoginPage() {
                 {error}
               </div>
             )}
-            <div className="flex items-center justify-between">
-              <Link
-                href="/auth/forgot-password"
-                className="text-sm text-primary hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign in"}
+              {isLoading ? "Creating account..." : "Sign up"}
             </Button>
 
             <div className="relative">
@@ -160,9 +205,9 @@ export default function LoginPage() {
             </div>
 
             <p className="text-center text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link href="/auth/signup" className="text-primary hover:underline">
-                Sign up
+              Already have an account?{" "}
+              <Link href="/auth/login" className="text-primary hover:underline">
+                Sign in
               </Link>
             </p>
           </CardFooter>

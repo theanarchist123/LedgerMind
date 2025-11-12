@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { ArrowRight, Receipt, Zap, Shield, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,9 +24,14 @@ export default function Home() {
           <Card className="border-0 shadow-none bg-transparent">
             <CardHeader className="text-center space-y-6">
               <div className="flex justify-center mb-4">
-                <div className="relative w-16 h-16">
-                  <div className="absolute inset-0 bg-primary rounded-xl animate-pulse" />
-                  <Receipt className="absolute inset-0 m-auto h-8 w-8 text-primary-foreground" />
+                <div className="relative w-28 h-28">
+                  <Image 
+                    src="/logo.png" 
+                    alt="LedgerMind Logo" 
+                    width={112} 
+                    height={112}
+                    className="object-contain"
+                  />
                 </div>
               </div>
               <div className="space-y-4">

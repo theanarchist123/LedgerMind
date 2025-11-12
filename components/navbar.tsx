@@ -1,6 +1,7 @@
 "use client"
 
 import { Bell, Moon, Sun } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,24 +14,39 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Switch } from "@/components/ui/switch"
 import { useTheme } from "@/components/theme-provider"
-import { useAuth } from "@/lib/auth-context"
+import { useSession, authClient } from "@/lib/auth-client"
 
 /**
  * Navbar component with user menu and theme toggle
  */
 export function Navbar() {
   const { theme, setTheme } = useTheme()
-  const { user, logout } = useAuth()
+  const { data: session } = useSession()
+  const router = useRouter()
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark")
   }
 
+  const handleLogout = async () => {
+    await authClient.signOut()
+    router.push("/auth/login")
+    router.refresh()
+  }
+
   // Default user if not logged in
-  const displayUser = user || {
+  const displayUser = session?.user || {
     name: "Guest User",
     email: "guest@ledgermind.com",
-    avatar: undefined,
+    image: undefined,
+  }
+
+  const getInitials = (name: string) => {
+    const parts = name.split(' ')
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase()
+    }
+    return name.substring(0, 2).toUpperCase()
   }
 
   return (
@@ -57,8 +73,8 @@ export function Navbar() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                 <Avatar>
-                  <AvatarImage src={displayUser.avatar || ""} alt={displayUser.name} />
-                  <AvatarFallback>{displayUser.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarImage src={displayUser.image || ""} alt={displayUser.name} />
+                  <AvatarFallback>{getInitials(displayUser.name)}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
@@ -82,7 +98,7 @@ export function Navbar() {
                 Billing
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout} className="text-red-600 dark:text-red-400">
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600 dark:text-red-400">
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>

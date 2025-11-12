@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { 
   LayoutDashboard, 
@@ -62,8 +63,14 @@ export function Sidebar() {
     <div className="space-y-4 py-4 flex flex-col h-full bg-card border-r">
       <div className="px-3 py-2 flex-1">
         <Link href="/app/dashboard" className="flex items-center pl-3 mb-14">
-          <div className="relative w-8 h-8 mr-4">
-            <div className="absolute inset-0 bg-primary rounded-lg" />
+          <div className="relative w-14 h-14 mr-3">
+            <Image 
+              src="/logo.png" 
+              alt="LedgerMind Logo" 
+              width={56} 
+              height={56}
+              className="object-contain"
+            />
           </div>
           <h1 className="text-xl font-bold">
             LedgerMind
