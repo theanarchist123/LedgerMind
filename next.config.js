@@ -25,6 +25,7 @@ const nextConfig = {
         'mongodb-client-encryption': 'commonjs mongodb-client-encryption',
       });
     }
+    
     return config;
   },
 }

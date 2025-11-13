@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Upload, FileText, CheckCircle2 } from "lucide-react"
+import { Upload, FileText, CheckCircle2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -20,17 +20,22 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { useRouter } from "next/navigation"
+import { nanoid } from "nanoid"
+import { useSession } from "@/lib/auth-client"
 
 /**
- * Upload page with file dropzone and mock upload simulation
+ * Upload page with RAG pipeline integration
  */
 export default function UploadPage() {
   const router = useRouter()
+  const { data: session } = useSession()
   const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [processingStatus, setProcessingStatus] = useState("")
   const [showSuccess, setShowSuccess] = useState(false)
   const [uploadedFileName, setUploadedFileName] = useState("")
+  const [error, setError] = useState("")
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -57,23 +62,57 @@ export default function UploadPage() {
     }
   }
 
-  const handleFileUpload = (file: File) => {
+  const handleFileUpload = async (file: File) => {
     setUploadedFileName(file.name)
     setIsUploading(true)
     setUploadProgress(0)
+    setError("")
+    setProcessingStatus("Uploading file...")
 
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval)
-          setIsUploading(false)
-          setShowSuccess(true)
-          return 100
-        }
-        return prev + 10
+    try {
+      // Generate receipt ID
+      const receiptId = `r_${nanoid(12)}`
+      const userId = session?.user?.id || "demo-user"
+
+      // Simulate upload progress
+      setUploadProgress(20)
+      setProcessingStatus("Extracting text with OCR...")
+
+      // Create form data
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("userId", userId)
+
+      setUploadProgress(40)
+      setProcessingStatus("Analyzing with AI...")
+
+      // Call the processing API
+      const response = await fetch(`/api/receipts/${receiptId}/process`, {
+        method: "POST",
+        body: formData,
       })
-    }, 300)
+
+      setUploadProgress(80)
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Processing failed")
+      }
+
+      const result = await response.json()
+      
+      setUploadProgress(100)
+      setProcessingStatus("Complete!")
+      setIsUploading(false)
+      setShowSuccess(true)
+      
+      console.log("Receipt processed:", result)
+    } catch (err: any) {
+      console.error("Upload error:", err)
+      setError(err.message || "Failed to process receipt")
+      setIsUploading(false)
+      setUploadProgress(0)
+    }
   }
 
   const handleSuccessClose = () => {
@@ -155,14 +194,25 @@ export default function UploadPage() {
 
           {/* Upload Progress */}
           {isUploading && (
-            <div className="mt-6 space-y-2">
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm font-medium">{processingStatus}</span>
+              </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">
-                  Uploading {uploadedFileName}...
+                  {uploadedFileName}
                 </span>
                 <span className="font-medium">{uploadProgress}%</span>
               </div>
               <Progress value={uploadProgress} className="h-2" />
+            </div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
+              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
             </div>
           )}
         </CardContent>
@@ -216,10 +266,10 @@ export default function UploadPage() {
                 <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
               </div>
             </div>
-            <DialogTitle className="text-center">Upload Successful!</DialogTitle>
+            <DialogTitle className="text-center">Receipt Processed Successfully!</DialogTitle>
             <DialogDescription className="text-center">
-              Your receipt has been uploaded and is being processed by our AI.
-              You'll be able to view the results shortly.
+              Your receipt has been processed using AI. The system has extracted merchant details,
+              line items, and categorized your expense. View it in your receipts list.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-row gap-2">

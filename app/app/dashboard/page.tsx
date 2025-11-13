@@ -1,4 +1,8 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useSession } from "@/lib/auth-client"
 import { DollarSign, Receipt, TrendingUp, Layers, ArrowRight } from "lucide-react"
 import {
   Card,
@@ -24,13 +28,115 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
-import { mockReceipts, mockAnalytics } from "@/lib/mockData"
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts"
+
+interface Analytics {
+  totalSpent: number
+  receiptsProcessed: number
+  averageConfidence: number
+  categoriesCount: number
+  statusCounts: Record<string, number>
+  categoryBreakdown: Array<{
+    category: string
+    amount: number
+    count: number
+    percentage: number
+  }>
+  monthlySpending: Array<{
+    month: string
+    amount: number
+    count: number
+  }>
+  topMerchants: Array<{
+    merchant: string
+    amount: number
+    count: number
+  }>
+}
+
+interface ReceiptItem {
+  id: string
+  merchant: string
+  date: string
+  category: string
+  status: string
+  total: number
+}
+
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82CA9D"]
 
 /**
- * Dashboard page with KPIs, charts, and recent receipts
+ * Dashboard page with real KPIs, charts, and recent receipts
  */
 export default function DashboardPage() {
-  const recentReceipts = mockReceipts.slice(0, 5)
+  const { data: session } = useSession()
+  const [analytics, setAnalytics] = useState<Analytics | null>(null)
+  const [recentReceipts, setRecentReceipts] = useState<ReceiptItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchDashboardData()
+    }
+  }, [session?.user?.id])
+
+  async function fetchDashboardData() {
+    try {
+      setLoading(true)
+      
+      // Fetch analytics
+      const analyticsRes = await fetch("/api/analytics")
+      if (analyticsRes.ok) {
+        const data = await analyticsRes.json()
+        setAnalytics(data)
+      }
+
+      // Fetch recent receipts
+      const receiptsRes = await fetch(`/api/receipts/list?userId=${session?.user?.id}&limit=5`)
+      if (receiptsRes.ok) {
+        const data = await receiptsRes.json()
+        setRecentReceipts(data.receipts || [])
+      }
+    } catch (error) {
+      console.error("Failed to fetch dashboard data:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading || !analytics) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-12 w-64" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -51,10 +157,10 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${mockAnalytics.totalSpent.toFixed(2)}
+              ${analytics.totalSpent.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              +12.5% from last month
+              Across {analytics.receiptsProcessed} receipts
             </p>
           </CardContent>
         </Card>
@@ -68,10 +174,10 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {mockAnalytics.receiptsProcessed}
+              {analytics.receiptsProcessed}
             </div>
             <p className="text-xs text-muted-foreground">
-              +3 this week
+              {analytics.statusCounts.completed || 0} completed
             </p>
           </CardContent>
         </Card>
@@ -85,10 +191,10 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {mockAnalytics.averageConfidence}%
+              {analytics.averageConfidence}%
             </div>
             <p className="text-xs text-muted-foreground">
-              Excellent accuracy
+              {analytics.averageConfidence >= 85 ? "Excellent" : analytics.averageConfidence >= 70 ? "Good" : "Fair"} accuracy
             </p>
           </CardContent>
         </Card>
@@ -100,7 +206,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {mockAnalytics.categoriesCount}
+              {analytics.categoriesCount}
             </div>
             <p className="text-xs text-muted-foreground">
               Active categories
@@ -122,17 +228,23 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle>Monthly Spending</CardTitle>
               <CardDescription>
-                Your spending trends over the past 3 months
+                Your spending trends over the past 6 months
               </CardDescription>
             </CardHeader>
             <CardContent className="pl-2">
-              {/* Mock chart placeholder */}
-              <div className="h-[300px] flex items-center justify-center border-2 border-dashed rounded-lg">
-                <div className="text-center space-y-2">
-                  <Skeleton className="h-[200px] w-full" />
-                  <p className="text-sm text-muted-foreground">Chart Placeholder</p>
-                </div>
-              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={analytics.monthlySpending}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value: number) => `$${value.toFixed(2)}`}
+                    labelStyle={{ color: '#000' }}
+                  />
+                  <Legend />
+                  <Bar dataKey="amount" fill="#0088FE" name="Amount" />
+                </BarChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </TabsContent>
@@ -146,47 +258,141 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] flex items-center justify-center border-2 border-dashed rounded-lg">
-                <div className="text-center space-y-2">
-                  <Skeleton className="h-[200px] w-full" />
-                  <p className="text-sm text-muted-foreground">Trend Chart Placeholder</p>
-                </div>
-              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={analytics.monthlySpending}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value: number) => `$${value.toFixed(2)}`}
+                    labelStyle={{ color: '#000' }}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="amount" 
+                    stroke="#00C49F" 
+                    strokeWidth={2}
+                    name="Spending"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="count" 
+                    stroke="#FF8042" 
+                    strokeWidth={2}
+                    name="Receipt Count"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Top Merchants */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Top Merchants</CardTitle>
+              <CardDescription>
+                Your most frequent vendors
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={analytics.topMerchants} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="merchant" type="category" width={100} />
+                  <Tooltip 
+                    formatter={(value: number) => `$${value.toFixed(2)}`}
+                    labelStyle={{ color: '#000' }}
+                  />
+                  <Bar dataKey="amount" fill="#8884D8" name="Total Spent" />
+                </BarChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="categories" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Category Breakdown</CardTitle>
-              <CardDescription>
-                Distribution of spending across categories
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {mockAnalytics.categoryBreakdown.map((cat) => (
-                  <div key={cat.category} className="flex items-center">
-                    <div className="w-[150px] text-sm font-medium">
-                      {cat.category}
-                    </div>
-                    <div className="flex-1">
-                      <div className="h-2 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full bg-primary"
-                          style={{ width: `${cat.percentage}%` }}
-                        />
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Pie Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Category Distribution</CardTitle>
+                <CardDescription>
+                  Spending by category
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={analytics.categoryBreakdown}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={(entry: any) => 
+                        `${entry.category}: ${entry.percentage}%`
+                      }
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="amount"
+                      nameKey="category"
+                    >
+                      {analytics.categoryBreakdown.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: number) => `$${value.toFixed(2)}`}
+                      labelStyle={{ color: '#000' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Category Breakdown List */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Category Breakdown</CardTitle>
+                <CardDescription>
+                  Detailed spending per category
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {analytics.categoryBreakdown.map((cat, index) => (
+                    <div key={cat.category} className="flex items-center">
+                      <div 
+                        className="w-3 h-3 rounded-full mr-3"
+                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium">{cat.category}</span>
+                          <span className="text-sm text-muted-foreground">
+                            ${cat.amount.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="h-2 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full transition-all"
+                            style={{ 
+                              width: `${cat.percentage}%`,
+                              backgroundColor: COLORS[index % COLORS.length]
+                            }}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {cat.count} receipt{cat.count !== 1 ? 's' : ''}
+                        </p>
                       </div>
                     </div>
-                    <div className="w-[100px] text-right text-sm text-muted-foreground">
-                      ${cat.amount.toFixed(2)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
 
@@ -209,44 +415,59 @@ export default function DashboardPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Merchant</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentReceipts.map((receipt) => (
-                <TableRow key={receipt.id}>
-                  <TableCell className="font-medium">
-                    {receipt.merchant}
-                  </TableCell>
-                  <TableCell>{receipt.date}</TableCell>
-                  <TableCell>{receipt.category}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        receipt.status === "completed"
-                          ? "default"
-                          : receipt.status === "needs_review"
-                          ? "secondary"
-                          : "outline"
-                      }
-                    >
-                      {receipt.status.replace("_", " ")}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    ${receipt.total.toFixed(2)}
-                  </TableCell>
+          {recentReceipts.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Receipt className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p>No receipts yet</p>
+              <Button asChild variant="link" size="sm" className="mt-2">
+                <Link href="/app/upload">Upload your first receipt</Link>
+              </Button>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Merchant</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {recentReceipts.map((receipt) => (
+                  <TableRow key={receipt.id}>
+                    <TableCell className="font-medium">
+                      <Link 
+                        href={`/app/receipts/${receipt.id}`}
+                        className="hover:underline"
+                      >
+                        {receipt.merchant || "Unknown"}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{receipt.date || "N/A"}</TableCell>
+                    <TableCell>{receipt.category || "Uncategorized"}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          receipt.status === "completed"
+                            ? "default"
+                            : receipt.status === "needs_review"
+                            ? "secondary"
+                            : "outline"
+                        }
+                      >
+                        {receipt.status?.replace("_", " ") || "pending"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      ${receipt.total?.toFixed(2) || "0.00"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
