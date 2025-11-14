@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useSession } from "@/lib/auth-client"
 import { DollarSign, Receipt, TrendingUp, Layers, ArrowRight, ArrowUpRight, ArrowDownRight } from "lucide-react"
-import { motion } from "framer-motion"
+import { motion, useMotionValue, useSpring, AnimatePresence } from "framer-motion"
 import {
   Card,
   CardContent,
@@ -50,6 +50,101 @@ import {
   ChartLegendContent,
 } from "@/components/ui/chart"
 import type { ChartConfig } from "@/components/ui/chart"
+
+// Animated number with spring effect
+function AnimatedNumber({ value, prefix = "", suffix = "" }: { value: number; prefix?: string; suffix?: string }) {
+  const mv = useMotionValue(0)
+  const spring = useSpring(mv, { stiffness: 140, damping: 18 })
+  const [display, setDisplay] = useState(0)
+
+  useEffect(() => {
+    mv.set(value)
+  }, [value, mv])
+
+  useEffect(() => {
+    const unsub = spring.on("change", (v) => setDisplay(Math.round(v)))
+    return () => unsub()
+  }, [spring])
+
+  return (
+    <span>
+      {prefix}{display.toLocaleString()}{suffix}
+    </span>
+  )
+}
+
+// Stats card component
+function StatsCard({
+  icon: Icon,
+  label,
+  value,
+  prefix,
+  suffix,
+  description,
+  trendIcon: TrendIcon,
+  colorClass,
+  borderClass,
+  bgClass,
+  iconBgClass,
+}: {
+  icon: any
+  label: string
+  value: number
+  prefix?: string
+  suffix?: string
+  description: string
+  trendIcon?: any
+  colorClass: string
+  borderClass: string
+  bgClass: string
+  iconBgClass: string
+}) {
+  return (
+    <Card className={`${borderClass} ${bgClass} hover:shadow-lg hover:shadow-green-500/10 transition-all`}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className={`text-sm font-medium ${colorClass}`}>{label}</CardTitle>
+        <div className={`h-10 w-10 rounded-full ${iconBgClass} flex items-center justify-center`}>
+          <Icon className={`h-5 w-5 ${colorClass.replace('text-', 'text-').replace('-400', '-500')}`} />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className={`text-3xl font-bold ${colorClass}`}>
+          <AnimatedNumber value={value} prefix={prefix} suffix={suffix} />
+        </div>
+        <div className="flex items-center gap-1 mt-1">
+          {TrendIcon && <TrendIcon className="h-3 w-3 text-green-500" />}
+          <p className="text-xs text-muted-foreground">
+            {description}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Animation variants
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.1 },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 18 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring" as const, stiffness: 260, damping: 24 },
+  },
+}
+
+// Tab transition variants
+const tabVariants = {
+  enter: { opacity: 0, x: 20, scale: 0.98 },
+  center: { opacity: 1, x: 0, scale: 1 },
+  exit: { opacity: 0, x: -20, scale: 0.98 },
+}
 
 interface Analytics {
   totalSpent: number
@@ -199,7 +294,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 scroll-smooth">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
@@ -208,129 +303,76 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* KPI Cards - Animated with Green Theme */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Total Spent Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0 }}
-          whileHover={{ scale: 1.02 }}
-        >
-          <Card className="border-green-500/20 bg-gradient-to-br from-green-950/50 to-background hover:shadow-lg hover:shadow-green-500/10 transition-all">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-400">Total Spent</CardTitle>
-              <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                <DollarSign className="h-5 w-5 text-green-500" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-400">
-                ${analytics.totalSpent.toFixed(2)}
-              </div>
-              <div className="flex items-center gap-1 mt-1">
-                <ArrowUpRight className="h-3 w-3 text-green-500" />
-                <p className="text-xs text-muted-foreground">
-                  {analytics.receiptsProcessed} receipts
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>        {/* Receipts Processed Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          whileHover={{ scale: 1.02 }}
-        >
-          <Card className="border-emerald-500/20 bg-gradient-to-br from-emerald-950/50 to-background hover:shadow-lg hover:shadow-emerald-500/10 transition-all">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-emerald-400">
-                Receipts Processed
-              </CardTitle>
-              <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                <Receipt className="h-5 w-5 text-emerald-500" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-emerald-400">
-                {analytics.receiptsProcessed}
-              </div>
-              <div className="flex items-center gap-1 mt-1">
-                <ArrowUpRight className="h-3 w-3 text-emerald-500" />
-                <p className="text-xs text-muted-foreground">
-                  {analytics.statusCounts.completed || 0} completed
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+      {/* KPI Cards - Animated with Spring Count-Up */}
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+      >
+        <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }}>
+          <StatsCard
+            icon={DollarSign}
+            label="Total Spent"
+            value={analytics.totalSpent}
+            prefix="$"
+            description={`${analytics.receiptsProcessed} receipts`}
+            trendIcon={ArrowUpRight}
+            colorClass="text-green-400"
+            borderClass="border-green-500/20"
+            bgClass="bg-gradient-to-br from-green-950/50 to-background"
+            iconBgClass="bg-green-500/10"
+          />
         </motion.div>
 
-        {/* Avg. Confidence Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-          whileHover={{ scale: 1.02 }}
-        >
-          <Card className="border-teal-500/20 bg-gradient-to-br from-teal-950/50 to-background hover:shadow-lg hover:shadow-teal-500/10 transition-all">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-teal-400">
-                Avg. Confidence
-              </CardTitle>
-              <div className="h-10 w-10 rounded-full bg-teal-500/10 flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-teal-500" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-teal-400">
-                {analytics.averageConfidence}%
-              </div>
-              <div className="flex items-center gap-1 mt-1">
-                {analytics.averageConfidence >= 85 ? (
-                  <ArrowUpRight className="h-3 w-3 text-teal-500" />
-                ) : (
-                  <ArrowDownRight className="h-3 w-3 text-orange-500" />
-                )}
-                <p className={`text-xs ${
-                  analytics.averageConfidence >= 85 
-                    ? "text-teal-400" 
-                    : analytics.averageConfidence >= 70 
-                    ? "text-yellow-400" 
-                    : "text-orange-400"
-                }`}>
-                  {analytics.averageConfidence >= 85 ? "Excellent" : analytics.averageConfidence >= 70 ? "Good" : "Fair"} accuracy
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+        <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }}>
+          <StatsCard
+            icon={Receipt}
+            label="Receipts Processed"
+            value={analytics.receiptsProcessed}
+            description={`${analytics.statusCounts.completed || 0} completed`}
+            trendIcon={ArrowUpRight}
+            colorClass="text-emerald-400"
+            borderClass="border-emerald-500/20"
+            bgClass="bg-gradient-to-br from-emerald-950/50 to-background"
+            iconBgClass="bg-emerald-500/10"
+          />
         </motion.div>
 
-        {/* Categories Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
-          whileHover={{ scale: 1.02 }}
-        >
-          <Card className="border-lime-500/20 bg-gradient-to-br from-lime-950/50 to-background hover:shadow-lg hover:shadow-lime-500/10 transition-all">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-lime-400">Categories</CardTitle>
-              <div className="h-10 w-10 rounded-full bg-lime-500/10 flex items-center justify-center">
-                <Layers className="h-5 w-5 text-lime-500" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-lime-400">
-                {analytics.categoriesCount}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Active categories
-              </p>
-            </CardContent>
-          </Card>
+        <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }}>
+          <StatsCard
+            icon={TrendingUp}
+            label="Avg. Confidence"
+            value={analytics.averageConfidence}
+            suffix="%"
+            description={
+              analytics.averageConfidence >= 85
+                ? "Excellent accuracy"
+                : analytics.averageConfidence >= 70
+                ? "Good accuracy"
+                : "Fair accuracy"
+            }
+            trendIcon={analytics.averageConfidence >= 85 ? ArrowUpRight : ArrowDownRight}
+            colorClass="text-teal-400"
+            borderClass="border-teal-500/20"
+            bgClass="bg-gradient-to-br from-teal-950/50 to-background"
+            iconBgClass="bg-teal-500/10"
+          />
         </motion.div>
-      </div>
+
+        <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }}>
+          <StatsCard
+            icon={Layers}
+            label="Categories"
+            value={analytics.categoriesCount}
+            description="Active categories"
+            colorClass="text-lime-400"
+            borderClass="border-lime-500/20"
+            bgClass="bg-gradient-to-br from-lime-950/50 to-background"
+            iconBgClass="bg-lime-500/10"
+          />
+        </motion.div>
+      </motion.div>
 
       {/* Charts Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
@@ -341,6 +383,14 @@ export default function DashboardPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
+          <motion.div
+            key="overview"
+            variants={tabVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
           <Card>
             <CardHeader>
               <CardTitle>Monthly Spending</CardTitle>
@@ -375,14 +425,23 @@ export default function DashboardPage() {
               </ChartContainer>
             </CardContent>
           </Card>
+          </motion.div>
         </TabsContent>
 
         <TabsContent value="trends" className="space-y-4">
+          <motion.div
+            key="trends"
+            variants={tabVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
           <Card>
             <CardHeader>
               <CardTitle>Spending Trends</CardTitle>
               <CardDescription>
-                Analyze your spending patterns over time
+                Track your spending patterns over time
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -466,9 +525,18 @@ export default function DashboardPage() {
               </ChartContainer>
             </CardContent>
           </Card>
+          </motion.div>
         </TabsContent>
 
         <TabsContent value="categories" className="space-y-4">
+          <motion.div
+            key="categories"
+            variants={tabVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
           <div className="grid gap-4 md:grid-cols-2">
             {/* Pie Chart */}
             <Card>
@@ -571,10 +639,16 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </div>
+          </motion.div>
         </TabsContent>
       </Tabs>
 
       {/* Recent Receipts */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -648,6 +722,7 @@ export default function DashboardPage() {
           )}
         </CardContent>
       </Card>
+      </motion.div>
     </div>
   )
 }
