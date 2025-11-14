@@ -74,12 +74,17 @@ export async function GET(request: Request) {
       const monthStr = monthDate.toLocaleDateString("en-US", { month: "short", year: "numeric" })
       
       const monthReceipts = receipts.filter((r) => {
-        if (!r.date && !r.createdAt) return false
-        const receiptDate = new Date(r.date || r.createdAt)
-        return (
-          receiptDate.getMonth() === monthDate.getMonth() &&
-          receiptDate.getFullYear() === monthDate.getFullYear()
-        )
+        try {
+          if (!r.date && !r.createdAt) return false
+          const receiptDate = new Date(r.date || r.createdAt)
+          if (isNaN(receiptDate.getTime())) return false
+          return (
+            receiptDate.getMonth() === monthDate.getMonth() &&
+            receiptDate.getFullYear() === monthDate.getFullYear()
+          )
+        } catch {
+          return false
+        }
       })
 
       monthlySpending.push({
