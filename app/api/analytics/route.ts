@@ -40,8 +40,15 @@ export async function GET(request: Request) {
     const receiptsWithConfidence = receipts.filter((r) => r.confidence != null)
     const avgConfidence = receiptsWithConfidence.length > 0
       ? Math.round(
-          receiptsWithConfidence.reduce((sum, r) => sum + (r.confidence || 0), 0) /
-            receiptsWithConfidence.length
+          receiptsWithConfidence.reduce((sum, r) => {
+            // Handle both number and object confidence formats
+            const confidence = typeof r.confidence === "number"
+              ? r.confidence
+              : typeof r.confidence === "object" && r.confidence !== null
+              ? (r.confidence.total || r.confidence.merchant || r.confidence.date || 0)
+              : 0
+            return sum + confidence
+          }, 0) / receiptsWithConfidence.length * 100 // Convert to percentage
         )
       : 0
 

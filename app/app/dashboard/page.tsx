@@ -6,7 +6,7 @@ import { useSession } from "@/lib/auth-client"
 import { DollarSign, Receipt, TrendingUp, Layers, ArrowRight, ArrowUpRight, ArrowDownRight } from "lucide-react"
 import { motion, useMotionValue, useSpring, AnimatePresence } from "framer-motion"
 import { AIInsightsCard } from "@/components/ai-insights-card"
-import { ReceiptChat } from "@/components/receipt-chat"
+import { ChatWidget } from "@/components/chat-widget"
 import {
   Card,
   CardContent,
@@ -387,17 +387,6 @@ export default function DashboardPage() {
         </motion.div>
       )}
 
-      {/* Receipt Chat */}
-      {session?.user?.id && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-        >
-          <ReceiptChat userId={session.user.id} />
-        </motion.div>
-      )}
-
       {/* Charts Section */}
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
@@ -747,6 +736,9 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
       </motion.div>
+
+      {/* Floating Chat Widget */}
+      {session?.user?.id && <ChatWidget userId={session.user.id} />}
     </div>
   )
 }
