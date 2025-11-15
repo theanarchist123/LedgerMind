@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSession } from "@/lib/auth-client"
+import { QABadge } from "@/components/qa-badge"
 
 interface Receipt {
   _id: string
@@ -42,6 +43,15 @@ interface Receipt {
   categoryConfidence?: number
   categoryMethod?: "learned" | "heuristic" | "llm"
   status: string
+  qaScore?: number
+  qaIssues?: Array<{
+    type: string
+    severity: string
+    field?: string
+    message: string
+    suggestion?: string
+  }>
+  isDuplicate?: boolean
   createdAt: string
 }
 
@@ -162,6 +172,7 @@ export default function ReceiptsPage() {
                     <TableHead>Merchant</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Category</TableHead>
+                    <TableHead>Quality</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -193,6 +204,15 @@ export default function ReceiptsPage() {
                             </Badge>
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <QABadge
+                          score={receipt.qaScore}
+                          issues={receipt.qaIssues}
+                          needsReview={receipt.status === "needs_review"}
+                          isDuplicate={receipt.isDuplicate}
+                          compact
+                        />
                       </TableCell>
                       <TableCell>
                         <Badge

@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSession } from "@/lib/auth-client"
 import { CategorySelector } from "@/components/category-selector"
+import { QABadge } from "@/components/qa-badge"
 
 interface Receipt {
   _id: string
@@ -47,6 +48,17 @@ interface Receipt {
   categorySuggestion?: string
   status: string
   confidence: number
+  qaScore?: number
+  qaIssues?: Array<{
+    type: string
+    severity: string
+    field?: string
+    message: string
+    suggestion?: string
+  }>
+  qaFlags?: string[]
+  isDuplicate?: boolean
+  duplicateOf?: string[]
   ocrText?: string
   parsedData?: any
   lineItems?: any[]
@@ -160,17 +172,25 @@ export default function ReceiptDetailPage() {
             <p className="text-muted-foreground">{receipt.merchant}</p>
           </div>
         </div>
-        <Badge
-          variant={
-            receipt.status === "completed"
-              ? "default"
-              : receipt.status === "needs_review"
-              ? "secondary"
-              : "outline"
-          }
-        >
-          {receipt.status.replace("_", " ")}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <QABadge
+            score={receipt.qaScore}
+            issues={receipt.qaIssues}
+            needsReview={receipt.status === "needs_review"}
+            isDuplicate={receipt.isDuplicate}
+          />
+          <Badge
+            variant={
+              receipt.status === "completed"
+                ? "default"
+                : receipt.status === "needs_review"
+                ? "secondary"
+                : "outline"
+            }
+          >
+            {receipt.status.replace("_", " ")}
+          </Badge>
+        </div>
       </div>
 
       {/* Tabs */}

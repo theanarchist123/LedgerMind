@@ -4,6 +4,7 @@ import { ocrImage } from "./ocr"
 import { parseReceiptWithAI, embedTexts } from "./ai"
 import { simpleChunker, cosineSimilarity } from "./chunking"
 import { autoCategorizeReceipt } from "./auto-categorizer"
+import { runReceiptQA, checkDuplicateReceipt } from "./receipt-qa"
 import type { ReceiptDoc, Chunk, RerankedChunk } from "./types"
 
 /**
@@ -78,6 +79,31 @@ export async function processReceipt({
     
     console.log(`[${receiptId}] Category: ${categorization.category} (${categorization.method}, ${(categorization.confidence * 100).toFixed(0)}% confidence)`)
 
+    // Step 2.6: Run QA checks
+    console.log(`[${receiptId}] Running QA checks...`)
+    const qaResult = await runReceiptQA({
+      merchant: parsed.merchant,
+      date: parsed.date,
+      total: parsed.total,
+      tax: parsed.tax,
+      lineItems: parsed.lineItems,
+      confidence: parsed.confidence,
+      ocrText,
+    })
+    
+    console.log(`[${receiptId}] QA Score: ${qaResult.score}/100, Issues: ${qaResult.issues.length}, Needs Review: ${qaResult.needsReview}`)
+    
+    // Check for duplicates
+    const existingReceipts = await receipts.find({ userId }).toArray()
+    const duplicateCheck = await checkDuplicateReceipt(
+      { merchant: parsed.merchant, date: parsed.date, total: parsed.total },
+      existingReceipts.map(r => ({ merchant: r.merchant, date: r.date, total: r.total, receiptId: r._id }))
+    )
+    
+    if (duplicateCheck.isDuplicate) {
+      console.log(`[${receiptId}] Possible duplicate detected (${duplicateCheck.similarity}% similar to ${duplicateCheck.matchedReceipts[0]})`)
+    }
+
     // Step 3: Chunk the text
     console.log(`[${receiptId}] Chunking text...`)
     const basicChunks = simpleChunker(ocrText, receiptId, userId)
@@ -112,7 +138,12 @@ export async function processReceipt({
           paymentMethod: parsed.paymentMethod,
           lineItems: parsed.lineItems || [],
           confidence: parsed.confidence,
-          status: "completed",
+          status: qaResult.needsReview ? "needs_review" : "completed",
+          qaScore: qaResult.score,
+          qaIssues: qaResult.issues,
+          qaFlags: qaResult.flags,
+          isDuplicate: duplicateCheck.isDuplicate,
+          duplicateOf: duplicateCheck.isDuplicate ? duplicateCheck.matchedReceipts : [],
           updatedAt: new Date(),
         },
       }

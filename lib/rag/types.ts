@@ -25,6 +25,17 @@ export interface ReceiptDoc {
     category?: number
   }
   parsedData?: any
+  qaScore?: number
+  qaIssues?: Array<{
+    type: string
+    severity: string
+    field?: string
+    message: string
+    suggestion?: string
+  }>
+  qaFlags?: string[]
+  isDuplicate?: boolean
+  duplicateOf?: string[]
   createdAt: Date
   updatedAt: Date
 }
