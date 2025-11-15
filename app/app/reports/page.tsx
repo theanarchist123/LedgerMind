@@ -63,7 +63,38 @@ interface Analytics {
 }
 
 /**
- * Reports page with date filters and export options - Fully Functional
+ * Safe number formatter to prevent rendering errors
+ */
+function safeNumber(value: any, decimals: number = 2): string {
+  const num = Number(value)
+  return isNaN(num) ? "0.00" : num.toFixed(decimals)
+}
+
+/**
+ * Safe string formatter to prevent rendering errors
+ */
+function safeString(value: any, fallback: string = "N/A"): string {
+  if (value === null || value === undefined) return fallback
+  if (typeof value === "string") return value
+  if (typeof value === "number" || typeof value === "boolean") return String(value)
+  return fallback
+}
+
+/**
+ * Safe date formatter to prevent rendering errors
+ */
+function safeDate(value: any): string {
+  try {
+    if (!value) return "N/A"
+    const date = new Date(value)
+    return isNaN(date.getTime()) ? "N/A" : date.toLocaleDateString()
+  } catch {
+    return "N/A"
+  }
+}
+
+/**
+ * Reports page with date filters and export options - Rewritten for Safety
  */
 export default function ReportsPage() {
   const { data: session } = useSession()
@@ -91,7 +122,7 @@ export default function ReportsPage() {
       const receiptsRes = await fetch(`/api/receipts/list?userId=${session?.user?.id}`)
       if (receiptsRes.ok) {
         const data = await receiptsRes.json()
-        setReceipts(data.receipts || [])
+        setReceipts(Array.isArray(data.receipts) ? data.receipts : [])
       }
 
       // Fetch analytics
@@ -102,6 +133,8 @@ export default function ReportsPage() {
       }
     } catch (error) {
       console.error("Failed to fetch report data:", error)
+      setReceipts([])
+      setAnalytics(null)
     } finally {
       setLoading(false)
     }
@@ -109,50 +142,86 @@ export default function ReportsPage() {
 
   // Filter receipts based on date range and category
   const filteredReceipts = receipts.filter(receipt => {
-    const receiptDate = new Date(receipt.date || receipt.createdAt)
-    const start = startDate ? new Date(startDate) : null
-    const end = endDate ? new Date(endDate) : null
+    try {
+      const receiptDateStr = receipt.date || receipt.createdAt
+      if (!receiptDateStr) return false
+      
+      const receiptDate = new Date(receiptDateStr)
+      if (isNaN(receiptDate.getTime())) return false
+      
+      const start = startDate ? new Date(startDate) : null
+      const end = endDate ? new Date(endDate) : null
 
-    const dateMatch = 
-      (!start || receiptDate >= start) &&
-      (!end || receiptDate <= end)
+      const dateMatch = 
+        (!start || receiptDate >= start) &&
+        (!end || receiptDate <= end)
 
-    const categoryMatch = 
-      !categoryFilter || 
-      receipt.category?.toLowerCase().includes(categoryFilter.toLowerCase())
+      const categoryMatch = 
+        !categoryFilter || 
+        (receipt.category && String(receipt.category).toLowerCase().includes(categoryFilter.toLowerCase()))
 
-    return dateMatch && categoryMatch
+      return dateMatch && categoryMatch
+    } catch {
+      return false
+    }
   })
 
-  // Calculate filtered analytics
+  // Calculate filtered analytics with safe number handling
   const filteredAnalytics = {
-    totalSpent: filteredReceipts.reduce((sum, r) => sum + (r.total || 0), 0),
+    totalSpent: filteredReceipts.reduce((sum, r) => {
+      const total = Number(r.total)
+      return sum + (isNaN(total) ? 0 : total)
+    }, 0),
     receiptsProcessed: filteredReceipts.length,
     averageConfidence: filteredReceipts.length > 0
-      ? Math.round(filteredReceipts.reduce((sum, r) => sum + (r.confidence || 0), 0) / filteredReceipts.length)
+      ? Math.round(
+          filteredReceipts.reduce((sum, r) => {
+            const conf = Number(r.confidence)
+            return sum + (isNaN(conf) ? 0 : conf)
+          }, 0) / filteredReceipts.length
+        )
       : 0,
-    categoriesCount: new Set(filteredReceipts.map(r => r.category).filter(Boolean)).size,
+    categoriesCount: new Set(
+      filteredReceipts
+        .map(r => r.category)
+        .filter(cat => cat !== null && cat !== undefined && cat !== "")
+    ).size,
     categoryBreakdown: analytics?.categoryBreakdown || []
   }
 
   function handleExportCSV() {
-    setExporting('csv')
-    exportToCSV(filteredReceipts, `ledgermind-receipts-${new Date().toISOString().split('T')[0]}.csv`)
-    setTimeout(() => setExporting(null), 1000)
+    try {
+      setExporting('csv')
+      exportToCSV(filteredReceipts, `ledgermind-receipts-${new Date().toISOString().split('T')[0]}.csv`)
+      setTimeout(() => setExporting(null), 1000)
+    } catch (error) {
+      console.error("Export CSV failed:", error)
+      setExporting(null)
+    }
   }
 
   function handleExportPDF() {
-    if (!analytics) return
-    setExporting('pdf')
-    exportToPDF(filteredReceipts, filteredAnalytics as Analytics, `ledgermind-report-${new Date().toISOString().split('T')[0]}.pdf`)
-    setTimeout(() => setExporting(null), 1000)
+    try {
+      if (!analytics) return
+      setExporting('pdf')
+      exportToPDF(filteredReceipts, filteredAnalytics as Analytics, `ledgermind-report-${new Date().toISOString().split('T')[0]}.pdf`)
+      setTimeout(() => setExporting(null), 1000)
+    } catch (error) {
+      console.error("Export PDF failed:", error)
+      setExporting(null)
+    }
   }
 
   function handleExportTaxReport() {
-    if (!analytics) return
-    setExporting('tax')
-    exportTaxReport(filteredReceipts, analytics, `ledgermind-tax-report-${new Date().getFullYear()}.pdf`)
-    setTimeout(() => setExporting(null), 1000)
+    try {
+      if (!analytics) return
+      setExporting('tax')
+      exportTaxReport(filteredReceipts, analytics, `ledgermind-tax-report-${new Date().getFullYear()}.pdf`)
+      setTimeout(() => setExporting(null), 1000)
+    } catch (error) {
+      console.error("Export tax report failed:", error)
+      setExporting(null)
+    }
   }
 
   function handleApplyFilters() {
@@ -181,6 +250,7 @@ export default function ReportsPage() {
       </div>
     )
   }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -346,9 +416,9 @@ export default function ReportsPage() {
                   <Download className="h-4 w-4" />
                 )}
                 Generate Report
-            </Button>
-          </CardContent>
-        </Card>
+              </Button>
+            </CardContent>
+          </Card>
         </motion.div>
       </div>
 
@@ -363,7 +433,7 @@ export default function ReportsPage() {
             <CardTitle>Report Preview</CardTitle>
             <CardDescription>
               {startDate || endDate 
-                ? `Filtered results ${startDate ? `from ${new Date(startDate).toLocaleDateString()}` : ''} ${endDate ? `to ${new Date(endDate).toLocaleDateString()}` : ''}`
+                ? `Filtered results ${startDate ? `from ${safeDate(startDate)}` : ''} ${endDate ? `to ${safeDate(endDate)}` : ''}`
                 : 'All receipts'}
             </CardDescription>
           </CardHeader>
@@ -375,7 +445,9 @@ export default function ReportsPage() {
                 whileHover={{ scale: 1.05 }}
               >
                 <p className="text-sm text-green-400 font-medium">Total Receipts</p>
-                <p className="text-3xl font-bold text-green-400">{filteredAnalytics.receiptsProcessed}</p>
+                <p className="text-3xl font-bold text-green-400">
+                  {String(filteredAnalytics.receiptsProcessed)}
+                </p>
               </motion.div>
               <motion.div 
                 className="border border-emerald-500/20 rounded-lg p-4 bg-gradient-to-br from-emerald-950/50 to-background"
@@ -383,7 +455,7 @@ export default function ReportsPage() {
               >
                 <p className="text-sm text-emerald-400 font-medium">Total Amount</p>
                 <p className="text-3xl font-bold text-emerald-400">
-                  ${filteredAnalytics.totalSpent.toFixed(2)}
+                  ${safeNumber(filteredAnalytics.totalSpent)}
                 </p>
               </motion.div>
               <motion.div 
@@ -392,7 +464,7 @@ export default function ReportsPage() {
               >
                 <p className="text-sm text-teal-400 font-medium">Categories</p>
                 <p className="text-3xl font-bold text-teal-400">
-                  {filteredAnalytics.categoriesCount}
+                  {String(filteredAnalytics.categoriesCount)}
                 </p>
               </motion.div>
               <motion.div 
@@ -401,7 +473,7 @@ export default function ReportsPage() {
               >
                 <p className="text-sm text-lime-400 font-medium">Avg. Confidence</p>
                 <p className="text-3xl font-bold text-lime-400">
-                  {filteredAnalytics.averageConfidence}%
+                  {String(filteredAnalytics.averageConfidence)}%
                 </p>
               </motion.div>
             </div>
@@ -420,33 +492,38 @@ export default function ReportsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredReceipts.slice(0, 10).map((receipt) => (
-                      <TableRow key={receipt._id}>
-                        <TableCell>
-                          {new Date(receipt.date || receipt.createdAt).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {receipt.merchant || 'Unknown'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="border-green-300 text-green-700">
-                            {receipt.category || 'Uncategorized'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-semibold">
-                          ${(receipt.total || 0).toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span className={`font-medium ${
-                            (receipt.confidence || 0) >= 85 ? 'text-green-600' :
-                            (receipt.confidence || 0) >= 70 ? 'text-yellow-600' :
-                            'text-orange-600'
-                          }`}>
-                            {receipt.confidence || 0}%
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {filteredReceipts.slice(0, 10).map((receipt) => {
+                      const receiptId = String(receipt._id || Math.random())
+                      const merchant = safeString(receipt.merchant, 'Unknown')
+                      const date = safeDate(receipt.date || receipt.createdAt)
+                      const category = safeString(receipt.category, 'Uncategorized')
+                      const total = safeNumber(receipt.total)
+                      const confidence = Number(receipt.confidence) || 0
+                      
+                      return (
+                        <TableRow key={receiptId}>
+                          <TableCell>{date}</TableCell>
+                          <TableCell className="font-medium">{merchant}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="border-green-300 text-green-700">
+                              {category}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            ${total}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span className={`font-medium ${
+                              confidence >= 85 ? 'text-green-600' :
+                              confidence >= 70 ? 'text-yellow-600' :
+                              'text-orange-600'
+                            }`}>
+                              {String(confidence)}%
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
 
