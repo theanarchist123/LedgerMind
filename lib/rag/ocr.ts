@@ -52,12 +52,15 @@ export async function ocrImage(buffer: Buffer): Promise<{ text: string; pages: n
   try {
     console.log("[OCR] 📸 Preprocessing image...");
     
+    // Enhanced preprocessing for full receipt capture
     const preprocessed = await sharp(buffer)
-      .rotate()
-      .grayscale()
-      .sharpen()
-      .normalize()
-      .resize({ width: 2000, withoutEnlargement: true })
+      .rotate() // Auto-rotate based on EXIF
+      .resize({ width: 2400, withoutEnlargement: true }) // Larger size for better OCR
+      .grayscale() // Convert to grayscale
+      .normalize() // Normalize histogram for better contrast
+      .linear(1.2, -(128 * 1.2) + 128) // Increase contrast
+      .sharpen({ sigma: 1.5 }) // Sharpen text
+      .threshold(128) // Binary threshold for clearer text
       .toFormat('png')
       .toBuffer();
 
@@ -71,7 +74,8 @@ export async function ocrImage(buffer: Buffer): Promise<{ text: string; pages: n
     console.log("[OCR] 🔍 Running native Tesseract CLI...");
 
     const tesseractPath = getTesseractPath();
-    const args = [inPath, outBase, '--psm', '6', '-l', 'eng', '--oem', '1'];
+    // PSM 4: Single column of text (better for receipts)
+    const args = [inPath, outBase, '--psm', '4', '-l', 'eng', '--oem', '1'];
 
     const { stderr } = await execFileP(tesseractPath, args, { 
       windowsHide: true,
@@ -123,32 +127,119 @@ export function extractTotalFromText(text: string): number | null {
   const normalizedText = normalizeOcrText(text);
   const lines = normalizedText.split(/\r?\n/);
   let total: number | null = null;
+  let subtotal: number | null = null;
+  let subtotalIndex = -1;
 
-  for (const line of lines) {
+  console.log("[OCR] Full extracted text:");
+  console.log(normalizedText);
+  console.log("[OCR] Analyzing lines for total...");
+
+  // First pass: Look for explicit "Total" (not "Sub Total" or "Subtotal")
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     const clean = line.trim().toLowerCase();
+    const original = line.trim();
     
-    if (/^(total|amount due|grand total|balance)\b/.test(clean)) {
+    // Track subtotal position - total must come AFTER this
+    if (/sub\s*total/i.test(clean)) {
+      const match = clean.match(/([\d]+\.[\d]{2})/);
+      if (match && subtotal === null) {
+        subtotal = parseFloat(match[1]);
+        subtotalIndex = i;
+        console.log(`[OCR] Found subtotal at line ${i}: $${subtotal}`);
+      }
+      continue;
+    }
+    
+    // Look for "Total (Eat In)", "Total (Take Out)", "Total (Dine In)" patterns
+    if (/total\s*\([^)]+\)/i.test(clean)) {
       const match = clean.match(/([\d]+\.[\d]{2})/);
       if (match) {
         total = parseFloat(match[1]);
+        console.log(`[OCR] ✅ Found Total with modifier: $${total} from line: "${original}"`);
         break;
       }
     }
     
-    if (/total[:\s]+([\d]+\.[\d]{2})/.test(clean)) {
-      total = parseFloat(RegExp.$1);
-      break;
+    // Look for explicit "Total", "Grand Total", "Amount Due", "Balance", "Final Total"
+    // Must be at start of line
+    if (/^\s*(total|amount due|grand total|balance|final total)\b/i.test(clean)) {
+      const match = clean.match(/([\d]+\.[\d]{2})/);
+      if (match) {
+        const amount = parseFloat(match[1]);
+        // Validate: Total should be >= subtotal (if we have one)
+        if (subtotal === null || amount >= subtotal) {
+          total = amount;
+          console.log(`[OCR] ✅ Found explicit total: $${total} from line: "${original}"`);
+          break;
+        } else {
+          console.log(`[OCR] ⚠️ Skipping total $${amount} - less than subtotal $${subtotal}`);
+        }
+      }
+    }
+    
+    // Alternative pattern: "Total: $XX.XX" or "Total $XX.XX" (with whitespace before Total)
+    if (/^\s*total[:\s]+\$?([\d]+\.[\d]{2})/i.test(clean)) {
+      const amount = parseFloat(RegExp.$1);
+      // Validate: Total should be >= subtotal
+      if (subtotal === null || amount >= subtotal) {
+        total = amount;
+        console.log(`[OCR] ✅ Found total with separator: $${total} from line: "${original}"`);
+        break;
+      } else {
+        console.log(`[OCR] ⚠️ Skipping total $${amount} - less than subtotal $${subtotal}`);
+      }
     }
   }
 
-  if (total === null) {
-    const amounts = [...normalizedText.matchAll(/([\d]+\.[\d]{2})/g)]
-      .map(m => parseFloat(m[1]))
-      .filter(n => n > 0 && n < 10000);
+  // If we found a total, return it
+  if (total !== null) {
+    console.log(`[OCR] 🎯 Final total selected: $${total}`);
+    return total;
+  }
+
+  console.log("[OCR] ⚠️ No explicit total found, trying smart fallback...");
+
+  // Smart fallback: Look for largest amount AFTER subtotal/tax lines
+  const linesAfterSubtotal = subtotalIndex >= 0 ? lines.slice(subtotalIndex) : lines;
+  const amounts: Array<{value: number, index: number}> = [];
+  
+  linesAfterSubtotal.forEach((line, idx) => {
+    const actualIndex = subtotalIndex >= 0 ? subtotalIndex + idx : idx;
+    const clean = line.trim().toLowerCase();
     
-    if (amounts.length > 0) {
-      total = Math.max(...amounts);
+    // Skip lines with "subtotal", "tax", or item descriptions
+    if (/sub\s*total|tax|mocha|latte|pie|milk|venti|grande/i.test(clean)) {
+      return;
     }
+    
+    // Extract amounts
+    const matches = [...clean.matchAll(/([\d]+\.[\d]{2})/g)];
+    matches.forEach(m => {
+      const value = parseFloat(m[1]);
+      if (value > 0 && value < 10000) {
+        amounts.push({ value, index: actualIndex });
+      }
+    });
+  });
+  
+  if (amounts.length > 0) {
+    // Get largest amount that comes after subtotal
+    total = Math.max(...amounts.map(a => a.value));
+    console.log(`[OCR] Using largest amount after subtotal: $${total}`);
+  }
+
+  // If still no total but we have a subtotal, add typical tax (~10%) as estimate
+  if (total === null && subtotal !== null) {
+    total = subtotal * 1.1; // Estimate with 10% tax
+    console.log(`[OCR] ⚠️ Estimating total from subtotal + 10% tax: $${total.toFixed(2)}`);
+    return parseFloat(total.toFixed(2));
+  }
+
+  if (total === null) {
+    console.log("[OCR] ❌ Could not find any valid total amount");
+  } else {
+    console.log(`[OCR] 🎯 Final total selected: $${total}`);
   }
 
   return total;

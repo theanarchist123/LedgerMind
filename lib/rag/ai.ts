@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai"
+import { extractTotalFromText } from "./ocr"
 
 const LLM_PROVIDER = (process.env.LLM_PROVIDER || "groq").toLowerCase()
 const EMB_PROVIDER = (process.env.EMBEDDINGS_PROVIDER || "ollama").toLowerCase()
@@ -225,7 +226,13 @@ Rules:
 - Return ONLY valid JSON, no markdown code blocks
 - Numbers must be numbers (not strings)
 - Use null for missing values
-- confidence values are 0.0 to 1.0`
+- confidence values are 0.0 to 1.0
+- CRITICAL: For "total" field, use the FINAL TOTAL amount (e.g., "Total", "Total (Eat In)", "Grand Total")
+- NEVER use "Sub Total" or "Subtotal" for the total field
+- If you see both Subtotal and Total, ALWAYS use Total
+- For "lineItems": ONLY include actual products/services purchased, NOT addresses, phone numbers, store names, or thank you messages
+- lineItems example: [{"description":"Chicken Sandwich","quantity":1,"unitPrice":8.99,"total":8.99}]
+- Skip any line that contains: street addresses, phone numbers, "thank you", website URLs, city/state/zip`
 
   try {
     console.log("Parsing receipt with AI (LLM)...")
@@ -323,22 +330,9 @@ function parseReceiptHeuristic(text: string) {
   const currencyMatch = text.match(/\b(USD|EUR|GBP|INR|CAD|AUD)\b/i)
   const currency = currencyMatch ? currencyMatch[0].toUpperCase() : "USD"
   
-  // Improved total matching - handle various formats and spacing
-  const totalRegexes = [
-    /total\s*[:]?\s*\$?\s*(\d+[,.]?\d*\.?\d{1,2})/i,  // Total: $38.02 or Total $38.02
-    /\btotal\b.*?(\d+[,.]?\d+\.?\d{2})/i,             // Total anywhere with amount
-    /amount\s*due\s*[:]?\s*\$?\s*(\d+[,.]?\d*\.?\d{1,2})/i,  // Amount due
-    /balance\s*[:]?\s*\$?\s*(\d+[,.]?\d*\.?\d{1,2})/i,       // Balance
-  ]
-  
-  let totalMatch = null
-  for (const regex of totalRegexes) {
-    const match = text.match(regex)
-    if (match) {
-      totalMatch = match
-      break
-    }
-  }
+  // Use the robust OCR total extraction function instead of simple regex
+  console.log("[Heuristic] Using OCR's extractTotalFromText for accurate total...")
+  const total = extractTotalFromText(text) || 0
   
   // Improved tax matching
   const taxRegexes = [
@@ -357,16 +351,29 @@ function parseReceiptHeuristic(text: string) {
 
   // Line items: lines with pattern: name ... $amount
   const lineItems = [] as any[]
+  
+  // More strict patterns that require $ sign and reasonable prices
   const lineItemRegexes = [
-    /^(.+?)\s{2,}\$?\s*(\d+[,.]?\d*\.?\d{1,2})$/,  // Original pattern: name    $12.34
-    /^(\d+)\s+(.+?)\s+\$?\s*(\d+[,.]?\d*\.?\d{1,2})$/,  // quantity name $12.34
-    /^(.+?)\s+\$?\s*(\d+[,.]?\d*\.?\d{1,2})$/,  // name $12.34 (less spacing)
+    /^(\d+)\s+(.+?)\s+\$\s*(\d+\.\d{2})$/,  // quantity name $12.34 (strict)
+    /^(.+?)\s{3,}\$\s*(\d+\.\d{2})$/,  // name    $12.34 (strict spacing)
+  ]
+  
+  // Skip patterns that indicate non-product lines
+  const skipPatterns = [
+    /^(subtotal|sub total|tax|total|amount|balance|grand total|payment|change)/i,
+    /^(street|road|avenue|ave|blvd|drive|dr|st\.|suite|unit|floor)/i,  // Address
+    /^\d{1,5}\s+[a-z]+\s+(street|road|avenue|ave|blvd|drive|dr)/i,  // Full address
+    /^(phone|tel|fax|email|website|www)/i,  // Contact info
+    /^(thank you|thanks|visit|come again|please)/i,  // Messages
+    /^[a-z]+,\s*[a-z]{2}\s*\d{5}/i,  // City, STATE ZIP
+    /^\d{3}[-.\s]?\d{3}[-.\s]?\d{4}$/,  // Phone number
   ]
   
   for (const l of lines.slice(1)) {
-    // Skip lines that are subtotal, tax, or total
-    if (/^(subtotal|tax|total|amount|balance)/i.test(l)) continue
+    // Skip lines matching any skip pattern
+    if (skipPatterns.some(pattern => pattern.test(l))) continue
     
+    // Only match lines that look like actual products with prices
     for (const regex of lineItemRegexes) {
       const m = l.match(regex)
       if (m) {
@@ -375,12 +382,16 @@ function parseReceiptHeuristic(text: string) {
         const quantity = hasQuantity ? parseInt(m[1]) : 1
         const amount = hasQuantity ? parseFloat(m[3]) : parseFloat(m[2])
         
-        lineItems.push({ 
-          description, 
-          quantity, 
-          unitPrice: amount / quantity, 
-          total: amount 
-        })
+        // Additional validation: price should be reasonable (not 0, not too large)
+        if (amount > 0 && amount < 10000 && description.length > 2) {
+          lineItems.push({ 
+            description, 
+            quantity, 
+            unitPrice: amount / quantity,
+            price: amount / quantity,  // Add both unitPrice and price for compatibility
+            total: amount 
+          })
+        }
         break
       }
     }
@@ -388,7 +399,7 @@ function parseReceiptHeuristic(text: string) {
   return {
     merchant,
     date: date || new Date().toISOString().split('T')[0],
-    total: totalMatch ? parseFloat(totalMatch[1]) : 0,
+    total, // Use the OCR-extracted total
     tax: taxMatch ? parseFloat(taxMatch[1]) : null,
     currency,
     category: inferCategory(merchant, lineItems),
@@ -397,7 +408,7 @@ function parseReceiptHeuristic(text: string) {
     confidence: {
       merchant: merchant ? 0.7 : 0.3,
       date: date ? 0.7 : 0.3,
-      total: totalMatch ? 0.8 : 0.2,
+      total: total > 0 ? 0.9 : 0.2, // Higher confidence when OCR function finds it
       category: 0.5,
     },
   }

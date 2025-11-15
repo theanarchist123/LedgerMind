@@ -12,15 +12,19 @@ export interface ReceiptDoc {
   tax?: number
   currency?: string
   category?: string
+  categoryConfidence?: number
+  categoryMethod?: "learned" | "heuristic" | "llm"
+  categorySuggestion?: string
   paymentMethod?: string
   status: ReceiptStatus
   lineItems?: LineItem[]
-  confidence?: {
+  confidence?: number | {
     merchant?: number
     date?: number
     total?: number
     category?: number
   }
+  parsedData?: any
   createdAt: Date
   updatedAt: Date
 }

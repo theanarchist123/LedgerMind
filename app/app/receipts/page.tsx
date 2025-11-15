@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Search, Filter, ChevronLeft, ChevronRight, Eye, Edit, Trash } from "lucide-react"
+import { Search, Filter, ChevronLeft, ChevronRight, Eye, Edit, Trash, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -39,6 +39,8 @@ interface Receipt {
   date: string
   total: number
   category: string
+  categoryConfidence?: number
+  categoryMethod?: "learned" | "heuristic" | "llm"
   status: string
   createdAt: string
 }
@@ -173,7 +175,24 @@ export default function ReceiptsPage() {
                       </TableCell>
                       <TableCell>{receipt.date}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{receipt.category}</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{receipt.category}</Badge>
+                          {receipt.categoryConfidence && receipt.categoryConfidence > 0 && (
+                            <Badge
+                              variant={
+                                receipt.categoryMethod === "learned"
+                                  ? "default"
+                                  : receipt.categoryMethod === "heuristic"
+                                  ? "secondary"
+                                  : "outline"
+                              }
+                              className="text-xs gap-1"
+                            >
+                              <Sparkles className="h-3 w-3" />
+                              {Math.round(receipt.categoryConfidence * 100)}%
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge

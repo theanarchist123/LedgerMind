@@ -3,6 +3,7 @@ import { getDb } from "./db"
 import { ocrImage } from "./ocr"
 import { parseReceiptWithAI, embedTexts } from "./ai"
 import { simpleChunker, cosineSimilarity } from "./chunking"
+import { autoCategorizeReceipt } from "./auto-categorizer"
 import type { ReceiptDoc, Chunk, RerankedChunk } from "./types"
 
 /**
@@ -65,6 +66,18 @@ export async function processReceipt({
       source: parsed.source
     }, null, 2))
 
+    // Step 2.5: Auto-categorize with AI
+    console.log(`[${receiptId}] Auto-categorizing...`)
+    const categorization = await autoCategorizeReceipt({
+      userId,
+      merchant: parsed.merchant,
+      lineItems: parsed.lineItems || [],
+      total: parsed.total,
+      ocrText,
+    })
+    
+    console.log(`[${receiptId}] Category: ${categorization.category} (${categorization.method}, ${(categorization.confidence * 100).toFixed(0)}% confidence)`)
+
     // Step 3: Chunk the text
     console.log(`[${receiptId}] Chunking text...`)
     const basicChunks = simpleChunker(ocrText, receiptId, userId)
@@ -92,7 +105,10 @@ export async function processReceipt({
           total: parsed.total,
           tax: parsed.tax,
           currency: parsed.currency || "USD",
-          category: parsed.category,
+          category: categorization.category,
+          categoryConfidence: categorization.confidence,
+          categoryMethod: categorization.method,
+          categorySuggestion: categorization.suggestion,
           paymentMethod: parsed.paymentMethod,
           lineItems: parsed.lineItems || [],
           confidence: parsed.confidence,
