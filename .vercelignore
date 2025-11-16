@@ -27,7 +27,7 @@ build
 *.md
 !README.md
 
-# Environment examples
+# Environment examples (keep .npmrc for deployment)
 .env.example
 
 # Git

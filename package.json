@@ -57,6 +57,7 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.0.0",
     "framer-motion": "^12.23.24",
+    "gsap": "^3.13.0",
     "jspdf": "^3.0.3",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.454.0",
