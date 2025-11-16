@@ -20,9 +20,35 @@ build
 *.sublime-project
 *.sublime-workspace
 
+# Vercel Ignore
+# Files/folders to exclude from Vercel deployment
+
+# Documentation (keep README.md)
+*.md
+!README.md
+
+# Environment examples
+.env.example
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# Logs
+*.log
+
 # OS
 .DS_Store
 Thumbs.db
+
+# Test files
+*.test.ts
+*.test.tsx
+__tests__
 
 # Testing
 coverage
