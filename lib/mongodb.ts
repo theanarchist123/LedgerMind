@@ -33,12 +33,20 @@ if (process.env.NODE_ENV === 'development') {
   clientPromise = client.connect();
 }
 
-// Get database instance synchronously for Better Auth
+// Get database instance for Better Auth
 export function getDbSync(): Db {
   if (!global._mongoDb) {
-    const client = new MongoClient(uri);
-    // Connect synchronously (blocking) - only used during initialization
-    global._mongoDb = client.db(dbName);
+    try {
+      const client = new MongoClient(uri, {
+        serverSelectionTimeoutMS: 5000,
+        connectTimeoutMS: 10000,
+      });
+      // Return db instance - Better Auth will handle connection
+      global._mongoDb = client.db(dbName);
+    } catch (error) {
+      console.error('MongoDB connection error:', error);
+      throw new Error('Failed to connect to MongoDB');
+    }
   }
   return global._mongoDb;
 }
