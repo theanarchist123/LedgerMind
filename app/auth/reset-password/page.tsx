@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -19,9 +19,9 @@ import { authClient } from "@/lib/auth-client"
 import { CheckCircle } from "lucide-react"
 
 /**
- * Reset Password page - Set new password using reset token
+ * Reset Password Form Component - Handles password reset logic
  */
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [password, setPassword] = useState("")
@@ -170,5 +170,35 @@ export default function ResetPasswordPage() {
         </form>
       </Card>
     </div>
+  )
+}
+
+/**
+ * Reset Password page - Set new password using reset token
+ */
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center px-4 bg-muted/30">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <div className="flex justify-center mb-4">
+              <div className="relative w-20 h-20">
+                <Image 
+                  src="/logo.png" 
+                  alt="LedgerMind Logo" 
+                  width={80} 
+                  height={80}
+                  className="object-contain"
+                />
+              </div>
+            </div>
+            <CardTitle className="text-2xl text-center">Loading...</CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
   )
 }
