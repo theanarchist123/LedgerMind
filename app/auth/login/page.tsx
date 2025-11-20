@@ -46,15 +46,21 @@ function LoginForm() {
       const result = await authClient.signIn.email({
         email,
         password,
+        callbackURL: "/app/dashboard",
       })
 
+      console.log('Email sign in result:', result)
+
       if (result.error) {
+        console.error('Email sign in error:', result.error)
         setError(result.error.message || "Invalid email or password")
       } else {
+        console.log('Email sign in successful, redirecting to dashboard')
         router.push("/app/dashboard")
         router.refresh()
       }
     } catch (err) {
+      console.error('Email sign in exception:', err)
       setError("An error occurred. Please try again.")
     } finally {
       setIsLoading(false)
@@ -63,9 +69,10 @@ function LoginForm() {
 
   const handleGoogleSignIn = async () => {
     try {
-      // Better Auth will handle the redirect automatically
+      // Pass callbackURL to redirect to dashboard after OAuth completes
       await authClient.signIn.social({
         provider: "google",
+        callbackURL: "/app/dashboard",
       })
     } catch (err) {
       console.error('Google sign in error:', err)
@@ -75,9 +82,10 @@ function LoginForm() {
 
   const handleGithubSignIn = async () => {
     try {
-      // Better Auth will handle the redirect automatically
+      // Pass callbackURL to redirect to dashboard after OAuth completes
       await authClient.signIn.social({
         provider: "github",
+        callbackURL: "/app/dashboard",
       })
     } catch (err) {
       console.error('GitHub sign in error:', err)
