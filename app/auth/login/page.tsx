@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -19,10 +19,9 @@ import { Separator } from "@/components/ui/separator"
 import { authClient } from "@/lib/auth-client"
 
 /**
- * Login page with Better Auth integration
- * Users can sign in with email and password
+ * Component that uses useSearchParams - must be wrapped in Suspense
  */
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
@@ -202,5 +201,21 @@ export default function LoginPage() {
         </form>
       </Card>
     </div>
+  )
+}
+
+/**
+ * Login page with Better Auth integration
+ * Users can sign in with email and password
+ */
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
