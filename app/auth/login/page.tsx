@@ -55,9 +55,10 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     try {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/app/dashboard",
+        callbackURL: `${baseUrl}/app/dashboard`,
       })
     } catch (err) {
       setError("Failed to sign in with Google")
@@ -66,9 +67,10 @@ export default function LoginPage() {
 
   const handleGithubSignIn = async () => {
     try {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
       await authClient.signIn.social({
         provider: "github",
-        callbackURL: "/app/dashboard",
+        callbackURL: `${baseUrl}/app/dashboard`,
       })
     } catch (err) {
       setError("Failed to sign in with GitHub")
