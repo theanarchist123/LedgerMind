@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -24,10 +24,19 @@ import { authClient } from "@/lib/auth-client"
  */
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+
+  // Check for OAuth error in URL
+  useEffect(() => {
+    const errorParam = searchParams?.get("error")
+    if (errorParam === "oauth_failed") {
+      setError("OAuth sign in failed. Please try again.")
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,24 +64,24 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+      // Better Auth will handle the redirect automatically
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: `${baseUrl}/app/dashboard`,
       })
     } catch (err) {
+      console.error('Google sign in error:', err)
       setError("Failed to sign in with Google")
     }
   }
 
   const handleGithubSignIn = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+      // Better Auth will handle the redirect automatically
       await authClient.signIn.social({
         provider: "github",
-        callbackURL: `${baseUrl}/app/dashboard`,
       })
     } catch (err) {
+      console.error('GitHub sign in error:', err)
       setError("Failed to sign in with GitHub")
     }
   }
