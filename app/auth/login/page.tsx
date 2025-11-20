@@ -54,15 +54,12 @@ function LoginForm() {
       if (result.error) {
         console.error('Email sign in error:', result.error)
         setError(result.error.message || "Invalid email or password")
-      } else {
-        console.log('Email sign in successful, redirecting to dashboard')
-        router.push("/app/dashboard")
-        router.refresh()
+        setIsLoading(false)
       }
+      // Don't manually redirect - Better Auth handles this via callbackURL
     } catch (err) {
       console.error('Email sign in exception:', err)
       setError("An error occurred. Please try again.")
-    } finally {
       setIsLoading(false)
     }
   }

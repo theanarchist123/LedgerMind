@@ -54,28 +54,16 @@ export default function SignupPage() {
         email,
         password,
         name,
+        callbackURL: "/app/dashboard",
       })
 
       if (result.error) {
         setError(result.error.message || "Failed to create account")
-      } else {
-        // Auto sign in after signup
-        const signInResult = await authClient.signIn.email({
-          email,
-          password,
-        })
-
-        if (signInResult.error) {
-          setError("Account created! Please sign in.")
-          setTimeout(() => router.push("/auth/login"), 2000)
-        } else {
-          router.push("/app/dashboard")
-          router.refresh()
-        }
+        setIsLoading(false)
       }
+      // Don't manually redirect - Better Auth handles this via callbackURL
     } catch (err) {
       setError("An error occurred. Please try again.")
-    } finally {
       setIsLoading(false)
     }
   }

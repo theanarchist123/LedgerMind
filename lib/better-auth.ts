@@ -5,16 +5,12 @@ import { getDbSync } from "./mongodb";
 export const auth = betterAuth({
   database: mongodbAdapter(getDbSync()),
   secret: process.env.BETTER_AUTH_SECRET || "default-secret-change-in-production-min-32-chars-long",
-  // Always prefer NEXT_PUBLIC_APP_URL to avoid Vercel preview URL issues
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"),
+  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   trustedOrigins: [
     "http://localhost:3000",
     "http://localhost:3001",
-    "https://ledger-mind.vercel.app",
-    "https://*.vercel.app",
-    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ""
-  ].filter(Boolean),
+    "https://ledger-mind.vercel.app"
+  ],
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
