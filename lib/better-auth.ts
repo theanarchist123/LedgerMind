@@ -9,7 +9,7 @@ export const auth = betterAuth({
   trustedOrigins: [
     "http://localhost:3000",
     "http://localhost:3001",
-    "https://ledger-mind.vercel.app"
+    "https://ledger-mind-30.vercel.app"
   ],
   emailAndPassword: {
     enabled: true,

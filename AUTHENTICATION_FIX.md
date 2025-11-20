@@ -32,7 +32,7 @@
 
 ```bash
 # Production URL (DO NOT use http or localhost)
-NEXT_PUBLIC_APP_URL=https://ledger-mind.vercel.app
+NEXT_PUBLIC_APP_URL=https://ledger-mind-30.vercel.app
 
 # Same as local .env.local
 BETTER_AUTH_SECRET=5f8c7d6e4a3b2c1d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6
@@ -57,7 +57,7 @@ GITHUB_CLIENT_SECRET=4b4c2ea7a885567ca6402494f620954bf657c8ff
 2. Edit your OAuth 2.0 Client
 3. Add authorized redirect URI:
    ```
-   https://ledger-mind.vercel.app/api/auth/callback/google
+   https://ledger-mind-30.vercel.app/api/auth/callback/google
    ```
 4. **IMPORTANT**: Publish app for production OR add test users
 
@@ -66,14 +66,14 @@ GITHUB_CLIENT_SECRET=4b4c2ea7a885567ca6402494f620954bf657c8ff
 2. Use the production app (Ov23lid9XSm1Yyb8AxY4)
 3. Verify callback URL:
    ```
-   https://ledger-mind.vercel.app/api/auth/callback/github
+   https://ledger-mind-30.vercel.app/api/auth/callback/github
    ```
 
 ## Testing Steps
 
 ### 1. Check Database Setup
 ```bash
-curl https://ledger-mind.vercel.app/api/auth/diag
+curl https://ledger-mind-30.vercel.app/api/auth/diag
 ```
 Should return:
 ```json
@@ -89,18 +89,18 @@ Should return:
 ```
 
 ### 2. Test Email/Password
-1. Go to https://ledger-mind.vercel.app/auth/signup
+1. Go to https://ledger-mind-30.vercel.app/auth/signup
 2. Create account with name, email, password
 3. Should auto-redirect to `/app/dashboard`
 
 ### 3. Test Google OAuth
-1. Go to https://ledger-mind.vercel.app/auth/login
+1. Go to https://ledger-mind-30.vercel.app/auth/login
 2. Click "Google" button
 3. Complete OAuth flow
 4. Should redirect to `/app/dashboard`
 
 ### 4. Test GitHub OAuth
-1. Go to https://ledger-mind.vercel.app/auth/login
+1. Go to https://ledger-mind-30.vercel.app/auth/login
 2. Click "GitHub" button
 3. Complete OAuth flow
 4. Should redirect to `/app/dashboard`
@@ -109,8 +109,8 @@ Should return:
 
 ### Issue: "redirect_uri_mismatch" (Google)
 **Solution**: 
-- Verify `NEXT_PUBLIC_APP_URL` is set to `https://ledger-mind.vercel.app` in Vercel
-- Check Google Console has exact callback URL: `https://ledger-mind.vercel.app/api/auth/callback/google`
+- Verify `NEXT_PUBLIC_APP_URL` is set to `https://ledger-mind-30.vercel.app` in Vercel
+- Check Google Console has exact callback URL: `https://ledger-mind-30.vercel.app/api/auth/callback/google`
 - Do NOT test on preview deployments (use production URL only)
 
 ### Issue: Email/password fails silently
@@ -136,7 +136,7 @@ Should return:
 - [ ] `/api/auth/diag` shows `betterAuth.ready: true`
 - [ ] Google OAuth app published or has your email as test user
 - [ ] GitHub OAuth callback URL matches production
-- [ ] Browser allows cookies for ledger-mind.vercel.app
+- [ ] Browser allows cookies for ledger-mind-30.vercel.app
 - [ ] Testing on production URL, not preview deployments
 
 ## Files Changed
