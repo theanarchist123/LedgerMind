@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth } from "@/lib/better-auth";
+
+// Use Node.js runtime instead of Edge to support MongoDB/crypto
+export const runtime = "nodejs";
 
 export const config = {
   matcher: [
@@ -26,11 +28,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check authentication for /app routes using Better Auth server-side session validation
+  // Check authentication for /app routes
   if (pathname.startsWith("/app")) {
-    const session = await auth.api.getSession({ headers: request.headers });
+    // Check for Better Auth session cookie (using "ledgermind" prefix from config)
+    const sessionCookie = request.cookies.get("ledgermind.session_token");
 
-    if (!session) {
+    if (!sessionCookie) {
       const url = request.nextUrl.clone();
       url.pathname = "/auth/login";
       url.searchParams.set("callbackUrl", pathname);
