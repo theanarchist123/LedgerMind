@@ -50,11 +50,12 @@ TESSERACT_PATH=C:\\Program Files\\Tesseract-OCR\\tesseract.exe
 ### Google Cloud Console
 1. Go to https://console.cloud.google.com/apis/credentials
 2. Select your OAuth 2.0 Client ID
-3. Add to **Authorized redirect URIs**:
+3. Add BOTH of these to **Authorized redirect URIs**:
    ```
    https://ledger-mind.vercel.app/api/auth/callback/google
-   https://your-vercel-url.vercel.app/api/auth/callback/google
+   http://localhost:3000/api/auth/callback/google
    ```
+   ⚠️ **Important:** Add both production and localhost for testing
 
 ### GitHub OAuth App
 1. Go to https://github.com/settings/developers
@@ -62,7 +63,11 @@ TESSERACT_PATH=C:\\Program Files\\Tesseract-OCR\\tesseract.exe
 3. Update **Authorization callback URL** to:
    ```
    https://ledger-mind.vercel.app/api/auth/callback/github
-   https://your-vercel-url.vercel.app/api/auth/callback/github
+   ```
+   
+   Note: GitHub only allows ONE callback URL. For development, create a separate OAuth app with:
+   ```
+   http://localhost:3000/api/auth/callback/github
    ```
 
 ## After Deployment
