@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -16,7 +16,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { authClient } from "@/lib/auth-client"
+import { Skeleton } from "@/components/ui/skeleton"
+import { authClient, useSession } from "@/lib/auth-client"
 
 /**
  * Signup page with Better Auth integration
@@ -24,12 +25,48 @@ import { authClient } from "@/lib/auth-client"
  */
 export default function SignupPage() {
   const router = useRouter()
+  const { data: session, isPending } = useSession()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+
+  // CRITICAL: If user already has a session, redirect to dashboard
+  useEffect(() => {
+    if (!isPending && session) {
+      console.log("Session detected on signup, redirecting to dashboard")
+      router.replace("/app/dashboard")
+    }
+  }, [session, isPending, router])
+
+  // Show loading while checking session
+  if (isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 bg-muted/30">
+        <Card className="w-full max-w-md p-8">
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  // If session exists, show redirecting message
+  if (session) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 bg-muted/30">
+        <div className="text-center space-y-4">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-lg">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    )
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -60,8 +97,10 @@ export default function SignupPage() {
       if (result.error) {
         setError(result.error.message || "Failed to create account")
         setIsLoading(false)
+      } else {
+        // Manually redirect after successful sign up
+        router.replace("/app/dashboard")
       }
-      // Don't manually redirect - Better Auth handles this via callbackURL
     } catch (err) {
       setError("An error occurred. Please try again.")
       setIsLoading(false)

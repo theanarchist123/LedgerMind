@@ -16,7 +16,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { authClient } from "@/lib/auth-client"
+import { Skeleton } from "@/components/ui/skeleton"
+import { authClient, useSession } from "@/lib/auth-client"
 
 /**
  * Component that uses useSearchParams - must be wrapped in Suspense
@@ -24,10 +25,22 @@ import { authClient } from "@/lib/auth-client"
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { data: session, isPending } = useSession()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+
+  // Get callback URL from query params
+  const callbackUrl = searchParams?.get("callbackUrl") || "/app/dashboard"
+
+  // CRITICAL: If user already has a session, redirect immediately
+  useEffect(() => {
+    if (!isPending && session) {
+      console.log("Session detected, redirecting to:", callbackUrl)
+      router.replace(callbackUrl)
+    }
+  }, [session, isPending, router, callbackUrl])
 
   // Check for OAuth error in URL
   useEffect(() => {
@@ -36,6 +49,33 @@ function LoginForm() {
       setError("OAuth sign in failed. Please try again.")
     }
   }, [searchParams])
+
+  // Show loading while checking session
+  if (isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 bg-muted/30">
+        <Card className="w-full max-w-md p-8">
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  // If session exists, show redirecting message
+  if (session) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 bg-muted/30">
+        <div className="text-center space-y-4">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-lg">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    )
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,7 +86,7 @@ function LoginForm() {
       const result = await authClient.signIn.email({
         email,
         password,
-        callbackURL: "/app/dashboard",
+        callbackURL: callbackUrl,
       })
 
       console.log('Email sign in result:', result)
@@ -55,8 +95,10 @@ function LoginForm() {
         console.error('Email sign in error:', result.error)
         setError(result.error.message || "Invalid email or password")
         setIsLoading(false)
+      } else {
+        // Manually redirect after successful sign in
+        router.replace(callbackUrl)
       }
-      // Don't manually redirect - Better Auth handles this via callbackURL
     } catch (err) {
       console.error('Email sign in exception:', err)
       setError("An error occurred. Please try again.")
@@ -66,10 +108,9 @@ function LoginForm() {
 
   const handleGoogleSignIn = async () => {
     try {
-      // Pass callbackURL to redirect to dashboard after OAuth completes
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/app/dashboard",
+        callbackURL: callbackUrl,
       })
     } catch (err) {
       console.error('Google sign in error:', err)
@@ -79,10 +120,9 @@ function LoginForm() {
 
   const handleGithubSignIn = async () => {
     try {
-      // Pass callbackURL to redirect to dashboard after OAuth completes
       await authClient.signIn.social({
         provider: "github",
-        callbackURL: "/app/dashboard",
+        callbackURL: callbackUrl,
       })
     } catch (err) {
       console.error('GitHub sign in error:', err)
