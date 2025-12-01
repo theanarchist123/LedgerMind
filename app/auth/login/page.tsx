@@ -34,14 +34,21 @@ function LoginForm() {
   // Get callback URL from query params
   const callbackUrl = searchParams?.get("callbackUrl") || "/app/dashboard"
 
+  // Track if we've already tried to redirect (prevent infinite loop)
+  const [hasTriedRedirect, setHasTriedRedirect] = useState(false)
+
   // CRITICAL: If user already has a session, redirect immediately
   useEffect(() => {
-    if (!isPending && session) {
+    if (!isPending && session && !hasTriedRedirect) {
       console.log("Session detected, redirecting to:", callbackUrl)
-      // Use window.location for more reliable redirect
-      window.location.href = callbackUrl
+      setHasTriedRedirect(true)
+      
+      // Small delay to ensure cookies are set
+      setTimeout(() => {
+        window.location.href = callbackUrl
+      }, 500)
     }
-  }, [session, isPending, callbackUrl])
+  }, [session, isPending, callbackUrl, hasTriedRedirect])
 
   // Check for OAuth error in URL
   useEffect(() => {
