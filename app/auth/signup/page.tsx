@@ -37,9 +37,10 @@ export default function SignupPage() {
   useEffect(() => {
     if (!isPending && session) {
       console.log("Session detected on signup, redirecting to dashboard")
-      router.replace("/app/dashboard")
+      // Use window.location for more reliable redirect
+      window.location.href = "/app/dashboard"
     }
-  }, [session, isPending, router])
+  }, [session, isPending])
 
   // Show loading while checking session
   if (isPending) {

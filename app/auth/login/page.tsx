@@ -38,9 +38,10 @@ function LoginForm() {
   useEffect(() => {
     if (!isPending && session) {
       console.log("Session detected, redirecting to:", callbackUrl)
-      router.replace(callbackUrl)
+      // Use window.location for more reliable redirect
+      window.location.href = callbackUrl
     }
-  }, [session, isPending, router, callbackUrl])
+  }, [session, isPending, callbackUrl])
 
   // Check for OAuth error in URL
   useEffect(() => {
