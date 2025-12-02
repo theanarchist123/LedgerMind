@@ -2,9 +2,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai"
 import { extractTotalFromText } from "./ocr"
 
 const LLM_PROVIDER = (process.env.LLM_PROVIDER || "groq").toLowerCase()
-const EMB_PROVIDER = (process.env.EMBEDDINGS_PROVIDER || "ollama").toLowerCase()
+const EMB_PROVIDER = (process.env.EMBEDDINGS_PROVIDER || "gemini").toLowerCase() // Default to Gemini (faster, cloud-based)
 const OLLAMA = process.env.OLLAMA_BASE_URL || "http://localhost:11434"
-const OLLAMA_LLM_MODEL = process.env.OLLAMA_LLM_MODEL || "tinyllama" // allow override (suggest smaller variants like llama3.2:3b or llama3.2:1b)
+const OLLAMA_LLM_MODEL = process.env.OLLAMA_LLM_MODEL || "tinyllama"
 const USE_LOCAL_RECEIPT_PARSE = (process.env.USE_LOCAL_RECEIPT_PARSE || "false").toLowerCase() === "true"
 const GROQ_KEY = process.env.GROQ_API_KEY
 const GEM_KEY = process.env.GOOGLE_API_KEY
@@ -12,17 +12,19 @@ const GEM_KEY = process.env.GOOGLE_API_KEY
 // Optional Gemini client (used only if GEM_KEY exists)
 const genAI = GEM_KEY ? new GoogleGenerativeAI(GEM_KEY) : null
 
-// --- Retry helper with exponential backoff ---
-async function withRetry<T>(fn: () => Promise<T>, tries = 3, base = 400): Promise<T> {
+// --- Retry helper with exponential backoff (reduced delays) ---
+async function withRetry<T>(fn: () => Promise<T>, tries = 2, base = 200): Promise<T> {
   let last: any
   for (let i = 0; i < tries; i++) {
     try {
       return await fn()
     } catch (e) {
       last = e
-      const wait = base * Math.pow(2, i) + Math.floor(Math.random() * 100)
-      console.log(`Retry ${i + 1}/${tries} after ${wait}ms...`)
-      await new Promise((r) => setTimeout(r, wait))
+      if (i < tries - 1) {
+        const wait = base * Math.pow(2, i) + Math.floor(Math.random() * 50)
+        console.log(`Retry ${i + 1}/${tries} after ${wait}ms...`)
+        await new Promise((r) => setTimeout(r, wait))
+      }
     }
   }
   throw last
@@ -30,64 +32,71 @@ async function withRetry<T>(fn: () => Promise<T>, tries = 3, base = 400): Promis
 
 /**
  * Generate embeddings with multi-provider fallback
- * Priority: Ollama (local) → Gemini (cloud) → Mock
+ * Priority: Gemini (cloud, fast batch) → Ollama (local) → Mock
  */
 export async function embedTexts(texts: string[]): Promise<number[][]> {
-  // 1) Try Ollama (local, free, fast)
+  if (texts.length === 0) return []
+  
+  // 1) Try Gemini FIRST (cloud, supports batch, fast)
+  if ((EMB_PROVIDER === "gemini" || EMB_PROVIDER === "google") && GEM_KEY && genAI) {
+    try {
+      console.log(`Using Gemini for embeddings (${texts.length} texts)...`)
+      const model = genAI.getGenerativeModel({ model: "text-embedding-004" })
+      
+      // Use parallel individual embedding calls (Gemini's batch API has type issues)
+      const startTime = Date.now()
+      const embeddings = await Promise.all(
+        texts.map(text => 
+          withRetry(() => model.embedContent(text))
+            .then(r => r.embedding.values)
+            .catch(() => mockEmbed(text, 768))
+        )
+      )
+      
+      console.log(`Gemini embeddings complete (${texts.length} vectors in ${Date.now() - startTime}ms)`)
+      return embeddings
+    } catch (error) {
+      console.warn("Gemini embeddings failed:", error)
+    }
+  }
+
+  // 2) Try Ollama (local, parallel processing)
   if (EMB_PROVIDER === "ollama") {
     try {
-      console.log("Using Ollama for embeddings...")
+      console.log(`Using Ollama for embeddings (${texts.length} texts)...`)
+      
+      // Process in parallel (max 5 concurrent)
+      const batchSize = 5
       const embeddings: number[][] = []
       
-      for (const text of texts) {
-        const res = await withRetry(async () => {
-          const r = await fetch(`${OLLAMA}/api/embeddings`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-              model: "nomic-embed-text", 
-              prompt: text 
-            }),
-          })
-          if (!r.ok) {
-            const errText = await r.text()
-            throw new Error(`Ollama embeddings ${r.status}: ${errText}`)
-          }
-          return r.json()
-        })
-        // Ollama returns { embedding: number[] }
-        if (res.embedding) {
-          embeddings.push(res.embedding)
-        }
+      for (let i = 0; i < texts.length; i += batchSize) {
+        const batch = texts.slice(i, i + batchSize)
+        const batchResults = await Promise.all(
+          batch.map(text =>
+            withRetry(async () => {
+              const r = await fetch(`${OLLAMA}/api/embeddings`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ model: "nomic-embed-text", prompt: text }),
+              })
+              if (!r.ok) throw new Error(`Ollama ${r.status}`)
+              const data = await r.json()
+              return data.embedding as number[]
+            }).catch(() => mockEmbed(text, 768))
+          )
+        )
+        embeddings.push(...batchResults)
       }
       
       if (embeddings.length === texts.length) {
         return embeddings
       }
     } catch (e) {
-      console.warn("Ollama embeddings failed, falling back to Gemini:", e)
+      console.warn("Ollama embeddings failed:", e)
     }
   }
 
-  // 2) Try Gemini (free tier with retry/backoff)
-  if (GEM_KEY && genAI) {
-    try {
-      console.log("Using Gemini for embeddings...")
-      const model = genAI.getGenerativeModel({ model: "text-embedding-004" })
-      const embeddings: number[][] = []
-      
-      for (const text of texts) {
-        const result = await withRetry(() => model.embedContent(text))
-        embeddings.push(result.embedding.values)
-      }
-      
-      return embeddings
-    } catch (error) {
-      console.warn("Gemini embeddings failed, falling back to mock:", error)
-    }
-  }
-
-  // 3) Mock fallback
+  // 3) Mock fallback (instant)
   console.log("Using mock embeddings (no providers available)")
   return texts.map((t) => mockEmbed(t, 768))
 }

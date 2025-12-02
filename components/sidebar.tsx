@@ -10,6 +10,8 @@ import {
   FileText, 
   Brain, 
   Leaf,
+  AlertOctagon,
+  Dna,
   Settings
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -42,14 +44,26 @@ const routes = [
   {
     label: "Mood Analysis",
     icon: Brain,
-    href: "/app/billing",
+    href: "/app/mood-analysis",
     color: "text-purple-500",
   },
   {
     label: "Carbon Tracker",
     icon: Leaf,
-    href: "/admin",
+    href: "/app/carbon-tracker",
     color: "text-green-500",
+  },
+  {
+    label: "Regret Predictor",
+    icon: AlertOctagon,
+    href: "/app/regret-predictor",
+    color: "text-orange-500",
+  },
+  {
+    label: "Spending DNA",
+    icon: Dna,
+    href: "/app/spending-dna",
+    color: "text-pink-500",
   },
 ]
 

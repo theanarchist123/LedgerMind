@@ -1,30 +1,65 @@
 import type { Chunk } from "./types"
 
 /**
- * Simple chunker that splits text into meaningful sections
+ * Optimized chunker - creates fewer, more meaningful chunks
+ * This reduces embedding API calls while maintaining search quality
  */
 export function simpleChunker(
   text: string,
   receiptId: string,
   userId: string
 ): Omit<Chunk, "embedding">[] {
-  // Split by double newlines or specific receipt sections
-  const chunks = text
-    .split(/\n{2,}|(?=Total|Tax|Subtotal|Payment)/gi)
-    .map((t) => t.trim())
-    .filter((t) => t.length > 0)
-
-  return chunks.map((t, i) => ({
-    id: `${receiptId}::${i}`,
-    receiptId,
-    userId,
-    page: 1,
-    text: t,
-    metadata: {
-      section: i === 0 ? "header" : i === chunks.length - 1 ? "footer" : "body",
-      index: i,
-    },
-  }))
+  // For receipts, we typically only need 1-2 chunks:
+  // - The full text as one chunk (best for semantic search)
+  // - Optionally split very long receipts (>2000 chars)
+  
+  const MAX_CHUNK_SIZE = 2000
+  const chunks: Omit<Chunk, "embedding">[] = []
+  
+  if (text.length <= MAX_CHUNK_SIZE) {
+    // Single chunk for most receipts (faster embedding)
+    chunks.push({
+      id: `${receiptId}::0`,
+      receiptId,
+      userId,
+      page: 1,
+      text: text.trim(),
+      metadata: {
+        section: "full",
+        index: 0,
+      },
+    })
+  } else {
+    // Split longer receipts into 2 chunks: header+items, totals+footer
+    const midpoint = Math.floor(text.length / 2)
+    const splitPoint = text.indexOf('\n', midpoint) || midpoint
+    
+    chunks.push({
+      id: `${receiptId}::0`,
+      receiptId,
+      userId,
+      page: 1,
+      text: text.slice(0, splitPoint).trim(),
+      metadata: {
+        section: "header",
+        index: 0,
+      },
+    })
+    
+    chunks.push({
+      id: `${receiptId}::1`,
+      receiptId,
+      userId,
+      page: 1,
+      text: text.slice(splitPoint).trim(),
+      metadata: {
+        section: "footer",
+        index: 1,
+      },
+    })
+  }
+  
+  return chunks
 }
 
 /**
