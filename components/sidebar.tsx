@@ -8,9 +8,9 @@ import {
   Receipt, 
   Upload, 
   FileText, 
-  CreditCard, 
-  Settings,
-  Users
+  Brain, 
+  Leaf,
+  Settings
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -40,16 +40,16 @@ const routes = [
     color: "text-orange-700",
   },
   {
-    label: "Billing",
-    icon: CreditCard,
+    label: "Mood Analysis",
+    icon: Brain,
     href: "/app/billing",
-    color: "text-emerald-500",
+    color: "text-purple-500",
   },
   {
-    label: "Admin",
-    icon: Users,
+    label: "Carbon Tracker",
+    icon: Leaf,
     href: "/admin",
-    color: "text-red-500",
+    color: "text-green-500",
   },
 ]
 
