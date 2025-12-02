@@ -36,55 +36,51 @@ No more manual data entry. No more lost receipts. No more guessing where your mo
 
 ## ✨ Features
 
+### 🎯 Core Features
+
 <table>
 <tr>
-<td align="center" width="33%">
+<td align="center" width="50%">
 
-### 🤖 AI-Powered OCR
-
-Upload any receipt — blurry, crumpled, handwritten. Our AI extracts merchant name, date, items, and total with **95%+ accuracy**.
-
-</td>
-<td align="center" width="33%">
-
-### 🏷️ Smart Categorization
-
-Machine learning automatically sorts your expenses into categories. Food, transport, utilities — it learns your spending patterns.
+**🤖 AI-Powered OCR**  
+Upload any receipt — blurry, crumpled, handwritten. AI extracts merchant, date, items, and total with 95%+ accuracy.
 
 </td>
-<td align="center" width="33%">
+<td align="center" width="50%">
 
-### 💬 Ask Your Data
-
-*"How much did I spend on coffee last month?"*  
-Natural language queries powered by Google Gemini AI.
+**🏷️ Smart Categorization**  
+Machine learning automatically sorts expenses. Food, transport, utilities — it learns your patterns.
 
 </td>
 </tr>
 <tr>
-<td align="center" width="33%">
+<td align="center" width="50%">
 
-### 📊 Beautiful Dashboards
-
-Real-time charts showing spending trends, category breakdowns, and monthly comparisons. Know exactly where your money goes.
-
-</td>
-<td align="center" width="33%">
-
-### 📄 Export Anything
-
-Generate PDF reports, CSV exports, or tax-ready documents. Perfect for freelancers, small businesses, or anyone who needs receipts organized.
+**💬 Natural Language Queries**  
+*"How much did I spend on coffee last month?"* Ask your data in plain English.
 
 </td>
-<td align="center" width="33%">
+<td align="center" width="50%">
 
-### 🔐 Bank-Level Security
-
-OAuth + email authentication via Better Auth. Your data is encrypted and stored securely in MongoDB Atlas. We never share your info.
+**📊 Real-time Dashboards**  
+Beautiful charts showing spending trends, category breakdowns, and monthly comparisons.
 
 </td>
 </tr>
 </table>
+
+### 🚀 Unique AI-Powered Features
+
+| Feature | What It Does |
+|:--------|:-------------|
+| **🧠 Mood Analysis** | Detects emotional spending patterns - stress buying, late-night splurges, impulse purchases |
+| **🌍 Carbon Footprint** | Calculates CO2 impact of purchases, suggests eco-friendly alternatives |
+| **🔮 Regret Predictor** | AI warns before potentially regrettable purchases (coming soon) |
+| **🧬 Spending DNA** | Creates your unique financial personality profile (coming soon) |
+| **👥 Split & Settle** | Smart bill splitting with AI item detection (coming soon) |
+| **🎮 Financial Health Game** | Gamified expense tracking with XP, badges, challenges (coming soon) |
+| **🔊 Voice Receipt Logger** | Speak to log expenses - no typing needed (coming soon) |
+| **📍 Location Insights** | Geographic spending heatmaps and nearby alternatives (coming soon) |
 
 ---
 
