@@ -1,11 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Brain, Moon, Clock, Calendar, AlertTriangle, TrendingUp, Lightbulb } from "lucide-react"
+import { Brain, Moon, Clock, Calendar, AlertTriangle, TrendingUp, Lightbulb, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 /**
  * Receipt Mood Analysis Page
@@ -14,65 +16,30 @@ import { Skeleton } from "@/components/ui/skeleton"
 export default function MoodAnalysisPage() {
   const [loading, setLoading] = useState(true)
   const [analysis, setAnalysis] = useState<any>(null)
+  const [period, setPeriod] = useState<"week" | "month" | "year">("month")
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchMoodAnalysis()
-  }, [])
+  }, [period])
 
   const fetchMoodAnalysis = async () => {
     try {
       setLoading(true)
-      // TODO: Replace with actual API call
-      // const res = await fetch('/api/analytics/mood-analysis')
-      // const data = await res.json()
+      setError(null)
       
-      // Mock data for now
-      setTimeout(() => {
-        setAnalysis({
-          overallMood: {
-            type: "routine",
-            score: 75,
-            description: "Disciplined, routine spending",
-            color: "text-green-500",
-          },
-          stressSpendingScore: 35,
-          impulseSpendingScore: 28,
-          lateNightSpending: {
-            count: 8,
-            total: 245.50,
-            percentage: 15,
-          },
-          weekendSpending: {
-            count: 24,
-            total: 890.25,
-            percentage: 45,
-          },
-          insights: [
-            {
-              title: "Late Night Shopping Alert",
-              description: "15% of purchases after 10 PM",
-              icon: "Moon",
-              type: "warning",
-              recommendation: "Try a 24-hour waiting period",
-            },
-            {
-              title: "Peak Spending: 6 PM",
-              description: "You spend most around 6 PM ($42.50 avg)",
-              icon: "Clock",
-              type: "info",
-            },
-            {
-              title: "Weekend Spender",
-              description: "45% of spending happens on weekends",
-              icon: "Calendar",
-              type: "info",
-            },
-          ],
-        })
-        setLoading(false)
-      }, 1000)
+      const res = await fetch(`/api/analytics/mood-analysis?period=${period}`)
+      
+      if (!res.ok) {
+        throw new Error("Failed to fetch mood analysis")
+      }
+      
+      const data = await res.json()
+      setAnalysis(data)
     } catch (error) {
       console.error("Failed to fetch mood analysis:", error)
+      setError("Unable to load mood analysis. Make sure you have uploaded some receipts.")
+    } finally {
       setLoading(false)
     }
   }
@@ -110,15 +77,40 @@ export default function MoodAnalysisPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <Brain className="h-8 w-8 text-purple-500" />
-          Spending Mood Analysis
-        </h1>
-        <p className="text-muted-foreground">
-          AI detects your emotional spending patterns
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Brain className="h-8 w-8 text-purple-500" />
+            Spending Mood Analysis
+          </h1>
+          <p className="text-muted-foreground">
+            AI detects your emotional spending patterns
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="week">This Week</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="year">This Year</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="icon" onClick={fetchMoodAnalysis} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
       </div>
+
+      {error && (
+        <Card className="border-orange-500">
+          <CardContent className="pt-6">
+            <p className="text-orange-500">{error}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Overall Mood Card */}
       <Card className="border-2 border-primary">

@@ -1,12 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Dna, Sparkles, Target, TrendingUp, Users, Share2, Download, Zap, Heart, ShoppingBag, Coffee, Plane } from "lucide-react"
+import { Dna, Sparkles, Target, TrendingUp, Users, Share2, Download, Zap, Heart, ShoppingBag, Coffee, Plane, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 /**
  * Spending DNA Page
@@ -15,66 +16,30 @@ import { Button } from "@/components/ui/button"
 export default function SpendingDNAPage() {
   const [loading, setLoading] = useState(true)
   const [analysis, setAnalysis] = useState<any>(null)
+  const [period, setPeriod] = useState<"week" | "month" | "year">("month")
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchDNAAnalysis()
-  }, [])
+  }, [period])
 
   const fetchDNAAnalysis = async () => {
     try {
       setLoading(true)
-      // TODO: Replace with actual API call
+      setError(null)
       
-      // Mock data
-      setTimeout(() => {
-        setAnalysis({
-          personalityType: {
-            name: "The Experience Seeker",
-            tagline: "Life is for living, not saving",
-            emoji: "🌟",
-            color: "from-purple-500 to-pink-500",
-          },
-          dnaStrands: [
-            { trait: "Planning", score: 65, icon: "Target", color: "text-blue-500" },
-            { trait: "Frugality", score: 42, icon: "TrendingUp", color: "text-green-500" },
-            { trait: "Experience Seeking", score: 88, icon: "Plane", color: "text-purple-500" },
-            { trait: "Consistency", score: 71, icon: "Zap", color: "text-yellow-500" },
-            { trait: "Digital Adoption", score: 85, icon: "Sparkles", color: "text-cyan-500" },
-            { trait: "Indulgence", score: 73, icon: "Heart", color: "text-red-500" },
-          ],
-          topCategories: [
-            { category: "Travel & Experiences", percentage: 28, icon: "Plane" },
-            { category: "Dining Out", percentage: 22, icon: "Coffee" },
-            { category: "Shopping", percentage: 18, icon: "ShoppingBag" },
-          ],
-          financialHabits: [
-            { habit: "Weekend Splurger", positive: false },
-            { habit: "Subscription Lover", positive: false },
-            { habit: "Budget-Conscious Grocer", positive: true },
-            { habit: "Early Bird Shopper", positive: true },
-          ],
-          compatibleTypes: [
-            { type: "The Planner", compatibility: 75 },
-            { type: "The Balanced", compatibility: 82 },
-            { type: "The Minimalist", compatibility: 45 },
-          ],
-          uniqueInsights: [
-            "You spend 3x more on experiences than the average user",
-            "Your happiest purchases are under $50",
-            "Friday evenings are your peak spending time",
-            "You're 40% more likely to buy from brands you follow on social media",
-          ],
-          shareCard: {
-            type: "The Experience Seeker",
-            tagline: "Life is for living, not saving",
-            topTraits: ["Experience Seeking", "Digital Adoption", "Indulgence"],
-            color: "purple",
-          },
-        })
-        setLoading(false)
-      }, 1000)
+      const res = await fetch(`/api/analytics/spending-dna?period=${period}`)
+      if (!res.ok) {
+        throw new Error('Failed to fetch DNA analysis')
+      }
+      
+      const data = await res.json()
+      setAnalysis(data)
     } catch (error) {
       console.error("Failed to fetch DNA analysis:", error)
+      setError("Unable to load spending DNA. Upload some receipts first!")
+      setAnalysis(null)
+    } finally {
       setLoading(false)
     }
   }
@@ -112,15 +77,40 @@ export default function SpendingDNAPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <Dna className="h-8 w-8 text-purple-500" />
-          Spending DNA
-        </h1>
-        <p className="text-muted-foreground">
-          Your unique financial personality profile
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Dna className="h-8 w-8 text-purple-500" />
+            Spending DNA
+          </h1>
+          <p className="text-muted-foreground">
+            Your unique financial personality profile
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="week">This Week</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="year">This Year</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="icon" onClick={fetchDNAAnalysis} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
       </div>
+
+      {error && (
+        <Card className="border-orange-500">
+          <CardContent className="pt-6">
+            <p className="text-orange-500">{error}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Personality Hero Card */}
       <Card className={`border-2 overflow-hidden bg-gradient-to-r ${analysis?.personalityType?.color || 'from-gray-500 to-gray-600'}`}>

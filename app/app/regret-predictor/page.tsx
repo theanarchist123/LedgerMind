@@ -1,12 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AlertOctagon, ShoppingBag, TrendingUp, Clock, DollarSign, Lightbulb, ThumbsDown, ThumbsUp, History } from "lucide-react"
+import { AlertOctagon, ShoppingBag, TrendingUp, Clock, DollarSign, Lightbulb, ThumbsDown, ThumbsUp, History, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 /**
  * Regret Predictor Page
@@ -15,89 +16,30 @@ import { Button } from "@/components/ui/button"
 export default function RegretPredictorPage() {
   const [loading, setLoading] = useState(true)
   const [analysis, setAnalysis] = useState<any>(null)
+  const [period, setPeriod] = useState<"week" | "month" | "year">("month")
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchRegretAnalysis()
-  }, [])
+  }, [period])
 
   const fetchRegretAnalysis = async () => {
     try {
       setLoading(true)
-      // TODO: Replace with actual API call
+      setError(null)
       
-      // Mock data
-      setTimeout(() => {
-        setAnalysis({
-          overallRegretRisk: 32,
-          totalPotentialRegrets: 5,
-          savedFromRegret: 12,
-          averageRegretAmount: 67.50,
-          highRiskPurchases: [
-            {
-              id: 1,
-              merchant: "TechGadgets Pro",
-              item: "Smart Watch Bundle",
-              amount: 299.99,
-              regretScore: 85,
-              reason: "Similar item purchased 3 weeks ago",
-              category: "Electronics",
-              date: "2 hours ago",
-            },
-            {
-              id: 2,
-              merchant: "Fashion Outlet",
-              item: "Designer Sneakers",
-              amount: 189.00,
-              regretScore: 72,
-              reason: "Late night impulse purchase pattern",
-              category: "Clothing",
-              date: "Yesterday",
-            },
-            {
-              id: 3,
-              merchant: "Game Store",
-              item: "Premium Game Pass",
-              amount: 59.99,
-              regretScore: 65,
-              reason: "3 similar subscriptions already active",
-              category: "Entertainment",
-              date: "3 days ago",
-            },
-          ],
-          pastRegrets: [
-            {
-              merchant: "Kitchen Pro",
-              item: "Air Fryer XL",
-              amount: 149.99,
-              regretConfirmed: true,
-              usageFrequency: "Used once",
-            },
-            {
-              merchant: "Fitness World",
-              item: "Home Gym Set",
-              amount: 399.99,
-              regretConfirmed: true,
-              usageFrequency: "Never used",
-            },
-          ],
-          regretPatterns: [
-            { pattern: "Late Night (10PM-2AM)", percentage: 68 },
-            { pattern: "Sale/Discount Items", percentage: 54 },
-            { pattern: "Electronics Over $200", percentage: 47 },
-            { pattern: "Subscription Services", percentage: 41 },
-          ],
-          tips: [
-            "🕐 Wait 48 hours before purchases over $100",
-            "📝 Check if you own something similar first",
-            "💭 Ask: 'Will I use this in 6 months?'",
-            "🎯 Set a monthly 'fun money' budget",
-            "🔔 Enable purchase cooling-off notifications",
-          ],
-        })
-        setLoading(false)
-      }, 1000)
+      const res = await fetch(`/api/analytics/regret-predictor?period=${period}`)
+      if (!res.ok) {
+        throw new Error('Failed to fetch regret analysis')
+      }
+      
+      const data = await res.json()
+      setAnalysis(data)
     } catch (error) {
       console.error("Failed to fetch regret analysis:", error)
+      setError("Unable to load regret analysis. Upload some receipts first!")
+      setAnalysis(null)
+    } finally {
       setLoading(false)
     }
   }
@@ -140,15 +82,40 @@ export default function RegretPredictorPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <AlertOctagon className="h-8 w-8 text-orange-500" />
-          Regret Predictor
-        </h1>
-        <p className="text-muted-foreground">
-          AI warns you before purchases you might regret
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            <AlertOctagon className="h-8 w-8 text-orange-500" />
+            Regret Predictor
+          </h1>
+          <p className="text-muted-foreground">
+            AI warns you before purchases you might regret
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="week">This Week</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="year">This Year</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="icon" onClick={fetchRegretAnalysis} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
       </div>
+
+      {error && (
+        <Card className="border-orange-500">
+          <CardContent className="pt-6">
+            <p className="text-orange-500">{error}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Hero Stats */}
       <div className="grid gap-6 md:grid-cols-4">

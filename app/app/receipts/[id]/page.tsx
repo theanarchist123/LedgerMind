@@ -113,8 +113,29 @@ export default function ReceiptDetailPage() {
     
     try {
       setSaving(true)
-      // Add save logic here
-      console.log("Saving receipt:", receipt)
+      
+      // Use receiptId (from URL) for the API call
+      const response = await fetch(`/api/receipts/${receipt.receiptId}/update`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          merchant: receipt.merchant,
+          date: receipt.date,
+          total: receipt.total,
+          category: receipt.category,
+          lineItems: receipt.lineItems,
+        }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to save receipt')
+      }
+      
+      const data = await response.json()
+      if (data.success) {
+        // Update local state with saved data
+        setReceipt({ ...receipt, ...data.receipt })
+      }
     } catch (error) {
       console.error("Error saving receipt:", error)
     } finally {

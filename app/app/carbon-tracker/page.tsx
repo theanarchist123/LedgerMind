@@ -1,12 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Leaf, TreePine, AlertTriangle, PieChart, TrendingDown, Lightbulb, Recycle } from "lucide-react"
+import { Leaf, TreePine, AlertTriangle, PieChart, TrendingDown, Lightbulb, Recycle, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 /**
  * Carbon Footprint Tracker Page
@@ -15,61 +16,30 @@ import { Button } from "@/components/ui/button"
 export default function CarbonFootprintPage() {
   const [loading, setLoading] = useState(true)
   const [analysis, setAnalysis] = useState<any>(null)
+  const [period, setPeriod] = useState<"week" | "month" | "year">("month")
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchCarbonAnalysis()
-  }, [])
+  }, [period])
 
   const fetchCarbonAnalysis = async () => {
     try {
       setLoading(true)
-      // TODO: Replace with actual API call
-      // const res = await fetch('/api/analytics/carbon-footprint')
-      // const data = await res.json()
+      setError(null)
       
-      // Mock data for now
-      setTimeout(() => {
-        setAnalysis({
-          totalCO2kg: 145.7,
-          treesEquivalent: 7,
-          ecoScore: 68,
-          categoryBreakdown: [
-            { category: "Transportation", co2kg: 58.3, percentage: 40 },
-            { category: "Food & Beverage", co2kg: 43.7, percentage: 30 },
-            { category: "Shopping", co2kg: 29.2, percentage: 20 },
-            { category: "Entertainment", co2kg: 14.5, percentage: 10 },
-          ],
-          topPolluters: [
-            { merchant: "Shell Gas Station", co2kg: 35.2, category: "Transportation" },
-            { merchant: "Amazon", co2kg: 18.9, category: "Shopping" },
-            { merchant: "Uber", co2kg: 15.4, category: "Transportation" },
-          ],
-          insights: [
-            {
-              title: "Consider Public Transport",
-              description: "40% of emissions from transportation",
-              icon: "AlertTriangle",
-              type: "warning",
-            },
-            {
-              title: "Plant 7 Trees to Offset",
-              description: "Your carbon footprint equals 145.7 kg CO2 this period",
-              icon: "TreePine",
-              type: "info",
-            },
-          ],
-          recommendations: [
-            "🚴 Switch to bike or public transport for short distances",
-            "🥗 Choose local, plant-based options to reduce food emissions",
-            "♻️ Buy second-hand or from sustainable brands",
-            "🌍 Use reusable bags and containers",
-            "💚 Support eco-certified businesses",
-          ],
-        })
-        setLoading(false)
-      }, 1000)
+      const res = await fetch(`/api/analytics/carbon-footprint?period=${period}`)
+      if (!res.ok) {
+        throw new Error('Failed to fetch carbon analysis')
+      }
+      
+      const data = await res.json()
+      setAnalysis(data)
     } catch (error) {
       console.error("Failed to fetch carbon analysis:", error)
+      setError("Unable to load carbon analysis. Upload some receipts first!")
+      setAnalysis(null)
+    } finally {
       setLoading(false)
     }
   }
@@ -112,15 +82,40 @@ export default function CarbonFootprintPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <Leaf className="h-8 w-8 text-green-500" />
-          Carbon Footprint Tracker
-        </h1>
-        <p className="text-muted-foreground">
-          Measure the environmental impact of your purchases
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Leaf className="h-8 w-8 text-green-500" />
+            Carbon Footprint Tracker
+          </h1>
+          <p className="text-muted-foreground">
+            Measure the environmental impact of your purchases
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="week">This Week</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="year">This Year</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="icon" onClick={fetchCarbonAnalysis} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
       </div>
+
+      {error && (
+        <Card className="border-orange-500">
+          <CardContent className="pt-6">
+            <p className="text-orange-500">{error}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Hero Stats */}
       <div className="grid gap-6 md:grid-cols-3">
