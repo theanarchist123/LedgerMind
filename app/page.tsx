@@ -2,7 +2,8 @@
 
 import { useEffect, useRef } from "react"
 import Link from "next/link"
-import { ArrowRight, Receipt, Zap, Shield, TrendingUp, Brain, FileCheck, Sparkles, Check, Star } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { ArrowRight, Receipt, Zap, Shield, TrendingUp, Brain, FileCheck, Sparkles, Check, Star, Quote } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Marquee } from "@/components/ui/marquee"
+import { useAuth } from "@/lib/auth-context"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { TextPlugin } from "gsap/TextPlugin"
@@ -23,6 +25,8 @@ gsap.registerPlugin(ScrollTrigger, TextPlugin)
  * Landing Page - Stunning animated home page with GSAP
  */
 export default function Home() {
+  const { isAuthenticated, isLoading } = useAuth()
+  const router = useRouter()
   const heroRef = useRef<HTMLDivElement>(null)
   const logoRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
@@ -30,7 +34,14 @@ export default function Home() {
   const buttonsRef = useRef<HTMLDivElement>(null)
   const featuresRef = useRef<HTMLDivElement>(null)
   const statsRef = useRef<HTMLDivElement>(null)
-  const pricingRef = useRef<HTMLDivElement>(null)
+
+  const handleGetStarted = () => {
+    if (isAuthenticated) {
+      router.push("/app/dashboard")
+    } else {
+      router.push("/auth/login")
+    }
+  }
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -61,12 +72,12 @@ export default function Home() {
       }, "-=0.3")
 
       // Buttons stagger animation
-      tl.from(buttonsRef.current?.children || [], {
-        opacity: 0,
-        y: 30,
-        stagger: 0.2,
-        duration: 0.5,
-      }, "-=0.3")
+      if (buttonsRef.current?.children) {
+        gsap.fromTo(buttonsRef.current.children, 
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, stagger: 0.2, duration: 0.5, clearProps: "all" }
+        )
+      }
 
       // Floating animation for logo
       gsap.to(logoRef.current, {
@@ -127,21 +138,6 @@ export default function Home() {
             ease: "power1.inOut",
           })
         }
-      })
-
-      // Pricing cards animation
-      gsap.utils.toArray<HTMLElement>(".pricing-card").forEach((card, index) => {
-        gsap.from(card, {
-          scrollTrigger: {
-            trigger: card,
-            start: "top bottom-=100",
-          },
-          y: 100,
-          opacity: 0,
-          duration: 0.6,
-          delay: index * 0.15,
-          ease: "back.out(1.2)",
-        })
       })
 
       // Parallax background effect
@@ -227,18 +223,15 @@ export default function Home() {
               </div>
 
               {/* CTA Buttons */}
-              <div ref={buttonsRef} className="flex flex-col sm:flex-row gap-5">
-                <Button asChild size="lg" className="gap-3 text-lg px-10 py-7 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-2xl shadow-green-500/50 hover:shadow-green-500/70 hover:scale-105 transition-all duration-300 rounded-2xl">
-                  <Link href="/auth/login">
-                    Start Free Trial
-                    <ArrowRight className="h-5 w-5" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="lg" className="gap-3 text-lg px-10 py-7 border-2 border-muted-foreground/20 hover:border-green-500/50 hover:bg-green-500/10 rounded-2xl transition-all duration-300">
-                  <Link href="/app/dashboard">
-                    <Sparkles className="h-5 w-5" />
-                    View Demo
-                  </Link>
+              <div ref={buttonsRef} className="flex flex-col sm:flex-row gap-5" style={{ opacity: 1, visibility: 'visible' }}>
+                <Button 
+                  onClick={handleGetStarted}
+                  size="lg" 
+                  className="gap-3 text-lg px-10 py-7 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-2xl shadow-green-500/50 hover:shadow-green-500/70 hover:scale-105 transition-all duration-300 rounded-2xl text-white font-semibold"
+                  style={{ opacity: 1, visibility: 'visible' }}
+                >
+                  {isLoading ? "Loading..." : isAuthenticated ? "Go to Dashboard" : "Get Started"}
+                  <ArrowRight className="h-5 w-5" />
                 </Button>
               </div>
 
@@ -357,12 +350,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Marquee - Trusted Organizations */}
+      {/* Marquee - Customer Testimonials */}
       <section className="py-16 bg-muted/30 relative overflow-hidden">
         <div className="container mx-auto mb-12">
           <p className="text-center text-sm text-muted-foreground uppercase tracking-wider font-medium">
-            Trusted by leading organizations worldwide
+            What Our Customers Say
           </p>
+          <h2 className="text-center text-3xl font-bold mt-2">
+            Loved by <span className="text-green-500">Thousands</span> of Users
+          </h2>
         </div>
         <div className="relative">
           {/* Heavy blur gradients on both ends - making edges completely invisible */}
@@ -371,29 +367,91 @@ export default function Home() {
           
           <Marquee pauseOnHover className="[--duration:40s] py-4">
             {[
-              { name: "Amazon", description: "E-commerce Giant" },
-              { name: "Flipkart", description: "India's Marketplace" },
-              { name: "Walmart", description: "Retail Leader" },
-              { name: "Target", description: "Retail Excellence" },
-              { name: "Shopify", description: "Commerce Platform" },
-              { name: "eBay", description: "Online Marketplace" },
-              { name: "Costco", description: "Wholesale Leader" },
-              { name: "Best Buy", description: "Tech Retailer" },
-            ].map((company, idx) => (
-              <div key={idx} className="mx-6 flex items-center justify-center">
-                <Card className="min-w-[240px] border-2 border-muted hover:border-green-500/50 bg-background/80 backdrop-blur transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-500/20">
-                  <CardContent className="p-8 flex flex-col items-center justify-center text-center space-y-3">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
-                      <span className="text-2xl font-bold text-white">{company.name.charAt(0)}</span>
+              { 
+                name: "Sarah Johnson", 
+                role: "Small Business Owner",
+                text: "LedgerMind saved me hours every week! The AI categorization is incredibly accurate.",
+                rating: 5,
+                avatar: "S"
+              },
+              { 
+                name: "Michael Chen", 
+                role: "Freelance Designer",
+                text: "Finally, a receipt tracker that actually understands my spending patterns. Game changer!",
+                rating: 5,
+                avatar: "M"
+              },
+              { 
+                name: "Emily Rodriguez", 
+                role: "Accountant",
+                text: "The export features make tax season so much easier. Highly recommend!",
+                rating: 5,
+                avatar: "E"
+              },
+              { 
+                name: "David Park", 
+                role: "Startup Founder",
+                text: "The spending DNA feature helped me understand my financial habits better than any app.",
+                rating: 5,
+                avatar: "D"
+              },
+              { 
+                name: "Lisa Thompson", 
+                role: "Project Manager",
+                text: "I love the mood analysis! It really opened my eyes to emotional spending.",
+                rating: 5,
+                avatar: "L"
+              },
+              { 
+                name: "James Wilson", 
+                role: "Restaurant Owner",
+                text: "Processing 100+ receipts weekly is now effortless. The OCR accuracy is unmatched.",
+                rating: 5,
+                avatar: "J"
+              },
+              { 
+                name: "Amanda Foster", 
+                role: "Financial Advisor",
+                text: "I recommend LedgerMind to all my clients. The insights are invaluable.",
+                rating: 5,
+                avatar: "A"
+              },
+              { 
+                name: "Robert Kim", 
+                role: "E-commerce Seller",
+                text: "The natural language search is amazing. I just ask questions and get instant answers!",
+                rating: 5,
+                avatar: "R"
+              },
+            ].map((testimonial, idx) => (
+              <div key={idx} className="mx-4 flex items-center justify-center">
+                <Card className="min-w-[320px] max-w-[320px] border-2 border-muted hover:border-green-500/50 bg-background/80 backdrop-blur transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-500/20">
+                  <CardContent className="p-6 space-y-4">
+                    {/* Quote Icon */}
+                    <Quote className="w-8 h-8 text-green-500/30" />
+                    
+                    {/* Testimonial Text */}
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      "{testimonial.text}"
+                    </p>
+                    
+                    {/* Rating Stars */}
+                    <div className="flex gap-1">
+                      {Array.from({ length: testimonial.rating }).map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                      ))}
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold">{company.name}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{company.description}</p>
+                    
+                    {/* Author */}
+                    <div className="flex items-center gap-3 pt-2 border-t">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                        <span className="text-sm font-bold text-white">{testimonial.avatar}</span>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-sm">{testimonial.name}</h4>
+                        <p className="text-xs text-muted-foreground">{testimonial.role}</p>
+                      </div>
                     </div>
-                    <Badge variant="secondary" className="text-xs">
-                      <Check className="w-3 h-3 mr-1" />
-                      Verified Partner
-                    </Badge>
                   </CardContent>
                 </Card>
               </div>
@@ -500,98 +558,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section ref={pricingRef} className="px-4 py-20 bg-gradient-to-b from-muted/50 to-background">
-        <div className="container mx-auto">
-          <div className="text-center mb-16 space-y-4">
-            <Badge variant="secondary" className="px-4 py-2 text-sm">
-              Pricing
-            </Badge>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Simple, Transparent Pricing
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Choose the plan that works best for you
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {[
-              {
-                name: "Free",
-                price: "0",
-                description: "Perfect for trying out",
-                features: ["10 receipts/month", "Basic OCR", "Email support", "7-day history"],
-                highlighted: false,
-              },
-              {
-                name: "Pro",
-                price: "29",
-                description: "For professionals",
-                features: ["Unlimited receipts", "Advanced AI", "Priority support", "Unlimited history", "Custom categories", "Export reports"],
-                highlighted: true,
-              },
-              {
-                name: "Business",
-                price: "99",
-                description: "For teams",
-                features: ["Everything in Pro", "Team collaboration", "API access", "Custom integrations", "Dedicated support", "SLA guarantee"],
-                highlighted: false,
-              },
-            ].map((plan, index) => (
-              <Card 
-                key={index}
-                className={`pricing-card relative ${
-                  plan.highlighted 
-                    ? "border-green-500 border-2 shadow-2xl shadow-green-500/20 scale-105" 
-                    : "border-2"
-                }`}
-              >
-                {plan.highlighted && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-1">
-                      Most Popular
-                    </Badge>
-                  </div>
-                )}
-                <CardHeader className="text-center pb-8">
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <CardDescription className="text-base">{plan.description}</CardDescription>
-                  <div className="mt-6">
-                    <span className="text-5xl font-bold">${plan.price}</span>
-                    <span className="text-muted-foreground">/month</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <ul className="space-y-3">
-                    {plan.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center gap-3">
-                        <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                        <span className="text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button 
-                    asChild 
-                    size="lg" 
-                    className={`w-full ${
-                      plan.highlighted
-                        ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-                        : ""
-                    }`}
-                    variant={plan.highlighted ? "default" : "outline"}
-                  >
-                    <Link href="/auth/login">
-                      Get Started
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="px-4 py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10" />
@@ -604,17 +570,14 @@ export default function Home() {
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 Join thousands of users who trust LedgerMind for their expense tracking
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                <Button asChild size="lg" className="gap-2 text-lg px-8 py-6 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700">
-                  <Link href="/auth/login">
-                    Start Free Trial
-                    <ArrowRight className="h-5 w-5" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="lg" className="gap-2 text-lg px-8 py-6">
-                  <Link href="/app/dashboard">
-                    View Demo
-                  </Link>
+              <div className="flex justify-center pt-4">
+                <Button 
+                  onClick={handleGetStarted}
+                  size="lg" 
+                  className="gap-2 text-lg px-8 py-6 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                >
+                  {isLoading ? "Loading..." : isAuthenticated ? "Go to Dashboard" : "Get Started"}
+                  <ArrowRight className="h-5 w-5" />
                 </Button>
               </div>
             </CardContent>

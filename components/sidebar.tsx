@@ -12,6 +12,7 @@ import {
   Leaf,
   AlertOctagon,
   Dna,
+  Sparkles,
   Settings
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -40,6 +41,12 @@ const routes = [
     icon: FileText,
     href: "/app/reports",
     color: "text-orange-700",
+  },
+  {
+    label: "Neural Insights",
+    icon: Sparkles,
+    href: "/app/neural-insights",
+    color: "text-purple-600",
   },
   {
     label: "Mood Analysis",
