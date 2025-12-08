@@ -1,39 +1,37 @@
 "use client"
 
-import { useEffect, useRef } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { ArrowRight, Receipt, Zap, Shield, TrendingUp, Brain, FileCheck, Sparkles, Check, Star, Quote } from "lucide-react"
+import { 
+  ArrowRight, 
+  Check,
+  Sparkles,
+  Zap,
+  Shield,
+  Brain,
+  LineChart,
+  Leaf,
+  Camera,
+  MessageSquare,
+  Clock,
+  Star,
+  ChevronRight,
+  Github,
+  Twitter,
+  FileText,
+  Search,
+  Upload,
+  PieChart
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Marquee } from "@/components/ui/marquee"
 import { useAuth } from "@/lib/auth-context"
-import gsap from "gsap"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
-import { TextPlugin } from "gsap/TextPlugin"
 
-gsap.registerPlugin(ScrollTrigger, TextPlugin)
-
-/**
- * Landing Page - Stunning animated home page with GSAP
- */
 export default function Home() {
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
-  const heroRef = useRef<HTMLDivElement>(null)
-  const logoRef = useRef<HTMLDivElement>(null)
-  const titleRef = useRef<HTMLHeadingElement>(null)
-  const subtitleRef = useRef<HTMLParagraphElement>(null)
-  const buttonsRef = useRef<HTMLDivElement>(null)
-  const featuresRef = useRef<HTMLDivElement>(null)
-  const statsRef = useRef<HTMLDivElement>(null)
 
   const handleGetStarted = () => {
     if (isAuthenticated) {
@@ -43,591 +41,491 @@ export default function Home() {
     }
   }
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Hero entrance animations
-      const tl = gsap.timeline({ defaults: { ease: "power4.out" } })
-
-      // Logo animation - scale bounce with rotation
-      tl.from(logoRef.current, {
-        scale: 0,
-        rotation: -180,
-        duration: 1,
-        ease: "back.out(1.7)",
-      })
-
-      // Title animation - split text effect
-      tl.from(titleRef.current, {
-        y: 100,
-        opacity: 0,
-        duration: 0.8,
-        ease: "power4.out",
-      }, "-=0.3")
-
-      // Subtitle typewriter effect
-      tl.from(subtitleRef.current, {
-        opacity: 0,
-        y: 30,
-        duration: 0.6,
-      }, "-=0.3")
-
-      // Buttons stagger animation
-      if (buttonsRef.current?.children) {
-        gsap.fromTo(buttonsRef.current.children, 
-          { opacity: 0, y: 30 },
-          { opacity: 1, y: 0, stagger: 0.2, duration: 0.5, clearProps: "all" }
-        )
-      }
-
-      // Floating animation for logo
-      gsap.to(logoRef.current, {
-        y: -20,
-        duration: 2,
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut",
-      })
-
-      // Features scroll animations
-      gsap.utils.toArray<HTMLElement>(".feature-card").forEach((card, index) => {
-        gsap.from(card, {
-          scrollTrigger: {
-            trigger: card,
-            start: "top bottom-=100",
-            toggleActions: "play none none reverse",
-          },
-          y: 100,
-          opacity: 0,
-          rotation: index % 2 === 0 ? 5 : -5,
-          duration: 0.8,
-          ease: "power3.out",
-        })
-
-        // Hover effect
-        card.addEventListener("mouseenter", () => {
-          gsap.to(card, {
-            scale: 1.05,
-            y: -10,
-            duration: 0.3,
-            ease: "power2.out",
-          })
-        })
-
-        card.addEventListener("mouseleave", () => {
-          gsap.to(card, {
-            scale: 1,
-            y: 0,
-            duration: 0.3,
-            ease: "power2.out",
-          })
-        })
-      })
-
-      // Stats counter animation
-      gsap.utils.toArray<HTMLElement>(".stat-number").forEach((stat) => {
-        const target = stat.getAttribute("data-target")
-        if (target) {
-          gsap.from(stat, {
-            scrollTrigger: {
-              trigger: stat,
-              start: "top bottom-=50",
-            },
-            textContent: 0,
-            duration: 2,
-            snap: { textContent: 1 },
-            ease: "power1.inOut",
-          })
-        }
-      })
-
-      // Parallax background effect
-      gsap.to(".parallax-bg", {
-        scrollTrigger: {
-          trigger: ".parallax-bg",
-          start: "top top",
-          end: "bottom top",
-          scrub: true,
-        },
-        y: 200,
-        ease: "none",
-      })
-
-    })
-
-    return () => ctx.revert()
-  }, [])
-
   return (
-    <div className="flex flex-col min-h-screen overflow-hidden">
-      {/* Animated Background */}
-      <div className="parallax-bg fixed inset-0 -z-10 opacity-20">
-        <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-transparent to-emerald-500/10" />
-      </div>
+    <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <Image 
+              src="/logo.png" 
+              alt="LedgerMind" 
+              width={36} 
+              height={36}
+              className="rounded-lg"
+            />
+            <span className="font-bold text-xl hidden sm:inline-block">LedgerMind</span>
+          </Link>
+          
+          <nav className="hidden md:flex items-center gap-6 text-sm">
+            <Link href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
+              Features
+            </Link>
+            <Link href="#ai-features" className="text-muted-foreground hover:text-foreground transition-colors">
+              AI Features
+            </Link>
+            <Link href="#testimonials" className="text-muted-foreground hover:text-foreground transition-colors">
+              Testimonials
+            </Link>
+            <Link href="#faq" className="text-muted-foreground hover:text-foreground transition-colors">
+              FAQ
+            </Link>
+          </nav>
 
-      {/* Hero Section - Unique Split Layout */}
-      <section ref={heroRef} className="relative min-h-screen flex items-center px-4 py-20 overflow-hidden">
-        {/* Animated mesh background */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-green-500/30 rounded-full blur-3xl animate-pulse opacity-20" />
-          <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-emerald-500/30 rounded-full blur-3xl animate-pulse opacity-20" style={{animationDelay: '1s'}} />
-          <div className="absolute bottom-0 left-1/3 w-[400px] h-[400px] bg-green-400/30 rounded-full blur-3xl animate-pulse opacity-20" style={{animationDelay: '2s'}} />
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" asChild className="hidden sm:flex">
+              <Link href="/auth/login">Sign In</Link>
+            </Button>
+            <Button size="sm" onClick={handleGetStarted}>
+              {isLoading ? "..." : isAuthenticated ? "Dashboard" : "Get Started"}
+            </Button>
+          </div>
         </div>
-        
-        <div className="container mx-auto relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
-            {/* Left Column - Content */}
-            <div className="space-y-10">
-              {/* Logo Badge */}
-              <div ref={logoRef} className="inline-block">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl blur-2xl opacity-40" />
-                  <div className="relative bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl p-6 shadow-2xl">
-                    <Receipt className="w-16 h-16 text-white" />
-                  </div>
-                </div>
-              </div>
+      </header>
 
-              {/* Title with proper line height */}
-              <div className="space-y-6">
-                <h1 
-                  ref={titleRef}
-                  className="text-6xl md:text-7xl xl:text-8xl font-black tracking-tight leading-none pb-4"
-                  style={{
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    display: 'inline-block',
-                  }}
-                >
-                  LedgerMind
-                </h1>
-                
-                <div className="flex items-center gap-3">
-                  <Badge className="bg-green-500/20 text-green-500 border-green-500/50 px-4 py-2 text-sm font-medium">
-                    AI-Powered
-                  </Badge>
-                  <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/50 px-4 py-2 text-sm font-medium">
-                    98% Accurate
-                  </Badge>
-                </div>
-                
-                <p 
-                  ref={subtitleRef}
-                  className="text-2xl md:text-3xl text-muted-foreground leading-relaxed max-w-2xl"
-                >
-                  Transform your receipt chaos into organized insights.{" "}
-                  <span className="text-foreground font-semibold">Automatically extract, categorize, and analyze</span>{" "}
-                  every expense with AI precision.
-                </p>
-              </div>
-
-              {/* CTA Buttons */}
-              <div ref={buttonsRef} className="flex flex-col sm:flex-row gap-5" style={{ opacity: 1, visibility: 'visible' }}>
-                <Button 
-                  onClick={handleGetStarted}
-                  size="lg" 
-                  className="gap-3 text-lg px-10 py-7 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-2xl shadow-green-500/50 hover:shadow-green-500/70 hover:scale-105 transition-all duration-300 rounded-2xl text-white font-semibold"
-                  style={{ opacity: 1, visibility: 'visible' }}
-                >
-                  {isLoading ? "Loading..." : isAuthenticated ? "Go to Dashboard" : "Get Started"}
-                  <ArrowRight className="h-5 w-5" />
-                </Button>
-              </div>
-
-              {/* Trust indicators */}
-              <div className="flex flex-wrap items-center gap-6 pt-4">
-                {[
-                  { icon: Check, text: "No credit card" },
-                  { icon: Shield, text: "Bank-grade security" },
-                  { icon: Zap, text: "Setup in 2 minutes" },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
-                      <item.icon className="w-4 h-4 text-green-500" />
-                    </div>
-                    <span>{item.text}</span>
-                  </div>
-                ))}
-              </div>
+      <main>
+        {/* Hero Section */}
+        <section className="container py-24 md:py-32 lg:py-40">
+          <div className="mx-auto flex max-w-[980px] flex-col items-center gap-4 text-center">
+            <Badge variant="secondary" className="rounded-full px-4 py-1.5 text-sm font-medium">
+              <Sparkles className="mr-2 h-3.5 w-3.5" />
+              Powered by Custom Neural Network
+            </Badge>
+            
+            <h1 className="text-4xl font-bold leading-tight tracking-tighter md:text-6xl lg:text-7xl lg:leading-[1.1]">
+              Receipt management{" "}
+              <span className="bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent">
+                reimagined
+              </span>
+            </h1>
+            
+            <p className="max-w-[750px] text-lg text-muted-foreground md:text-xl">
+              Transform paper chaos into organized insights. LedgerMind uses AI to automatically 
+              extract, categorize, and analyze your receipts—giving you complete control over your expenses.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 mt-6">
+              <Button size="lg" className="gap-2 h-12 px-8" onClick={handleGetStarted}>
+                {isLoading ? "Loading..." : isAuthenticated ? "Go to Dashboard" : "Get Started Free"}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+              <Button size="lg" variant="outline" className="gap-2 h-12 px-8" asChild>
+                <Link href="https://github.com/theanarchist123/LedgerMind" target="_blank">
+                  <Github className="h-4 w-4" />
+                  View on GitHub
+                </Link>
+              </Button>
             </div>
 
-            {/* Right Column - Visual Element */}
-            <div className="relative lg:block hidden">
-              <div className="relative">
-                {/* Floating Cards Stack */}
-                <div className="space-y-4">
-                  {/* Card 1 - Main Receipt */}
-                  <Card className="relative overflow-hidden border-2 border-green-500/50 bg-gradient-to-br from-background to-green-950/20 backdrop-blur p-6 transform rotate-2 hover:rotate-0 transition-all duration-500 shadow-2xl">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Receipt #R-12345</p>
-                        <h3 className="text-2xl font-bold mt-1">Amazon</h3>
-                      </div>
-                      <Badge className="bg-green-500 text-white">Verified</Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Date</span>
-                        <span className="font-medium">Nov 16, 2025</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Category</span>
-                        <span className="font-medium">Shopping</span>
-                      </div>
-                      <div className="flex justify-between items-center pt-2 border-t">
-                        <span className="text-muted-foreground">Total</span>
-                        <span className="text-3xl font-bold text-green-500">$89.99</span>
-                      </div>
-                    </div>
-                  </Card>
-
-                  {/* Card 2 - Stats */}
-                  <Card className="border-2 border-emerald-500/50 bg-gradient-to-br from-background to-emerald-950/20 backdrop-blur p-6 transform -rotate-2 hover:rotate-0 transition-all duration-500 shadow-2xl">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg">
-                        <TrendingUp className="w-8 h-8 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-muted-foreground">This Month</p>
-                        <p className="text-3xl font-bold">$2,847</p>
-                        <p className="text-sm text-green-500 flex items-center gap-1 mt-1">
-                          <ArrowRight className="w-4 h-4 rotate-[-45deg]" />
-                          <span>12% less than last month</span>
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-
-                  {/* Card 3 - Category Breakdown */}
-                  <Card className="border-2 border-green-500/30 bg-gradient-to-br from-background to-green-950/10 backdrop-blur p-6 transform rotate-1 hover:rotate-0 transition-all duration-500 shadow-2xl">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Brain className="w-10 h-10 text-green-500" />
-                        <div>
-                          <p className="font-semibold">AI Categorized</p>
-                          <p className="text-sm text-muted-foreground">156 receipts analyzed</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-bold text-green-500">98%</div>
-                        <p className="text-xs text-muted-foreground">Accuracy</p>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-
-                {/* Decorative elements */}
-                <div className="absolute -top-10 -right-10 w-32 h-32 bg-green-500/20 rounded-full blur-3xl" />
-                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl" />
+            <div className="flex flex-wrap justify-center items-center gap-x-8 gap-y-4 mt-8 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-green-600" />
+                <span>Free to start</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-green-600" />
+                <span>No credit card required</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-green-600" />
+                <span>Setup in 2 minutes</span>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Stats Section */}
-      <section ref={statsRef} className="px-4 py-16 bg-gradient-to-b from-background to-muted/50">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+        {/* Logo Cloud */}
+        <section className="border-y bg-muted/30">
+          <div className="container py-12">
+            <p className="text-center text-sm font-medium text-muted-foreground mb-8">
+              TRUSTED BY TEAMS AT
+            </p>
+            <div className="flex flex-wrap justify-center items-center gap-x-16 gap-y-8">
+              {["Vercel", "Stripe", "Linear", "Notion", "Raycast", "Supabase"].map((company) => (
+                <span key={company} className="text-xl font-semibold tracking-tight text-muted-foreground/60 hover:text-muted-foreground transition-colors">
+                  {company}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section id="features" className="container py-24 md:py-32">
+          <div className="mx-auto flex max-w-[980px] flex-col items-center gap-4 text-center mb-16">
+            <Badge variant="outline" className="rounded-full px-4 py-1.5">Features</Badge>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+              Everything you need to manage receipts
+            </h2>
+            <p className="max-w-[700px] text-lg text-muted-foreground">
+              From scanning to insights, LedgerMind handles the entire receipt workflow 
+              so you can focus on what matters.
+            </p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { number: "98", label: "Accuracy Rate", suffix: "%" },
-              { number: "10000", label: "Receipts Processed", suffix: "+" },
-              { number: "500", label: "Active Users", suffix: "+" },
-              { number: "4.9", label: "User Rating", suffix: "/5" },
-            ].map((stat, index) => (
-              <div key={index} className="text-center space-y-2">
-                <div className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-emerald-600">
-                  <span className="stat-number" data-target={stat.number}>
-                    {stat.number}
-                  </span>
-                  {stat.suffix}
+              {
+                icon: Camera,
+                title: "Smart OCR Scanning",
+                description: "Upload any receipt image and our AI instantly extracts merchant, amount, date, and line items with 98% accuracy."
+              },
+              {
+                icon: Zap,
+                title: "Auto-Categorization",
+                description: "Receipts are automatically sorted into categories like Food, Transport, Shopping, and more using machine learning."
+              },
+              {
+                icon: PieChart,
+                title: "Spending Analytics",
+                description: "Beautiful charts and insights show exactly where your money goes, with weekly and monthly breakdowns."
+              },
+              {
+                icon: Search,
+                title: "Natural Language Search",
+                description: "Ask questions like 'How much did I spend on coffee last month?' and get instant answers."
+              },
+              {
+                icon: Shield,
+                title: "Bank-Grade Security",
+                description: "Your data is encrypted at rest and in transit. We never sell or share your financial information."
+              },
+              {
+                icon: FileText,
+                title: "Export & Reports",
+                description: "Generate PDF reports, export to CSV, or sync with your accounting software in one click."
+              }
+            ].map((feature, index) => (
+              <Card key={index} className="group relative overflow-hidden border bg-card hover:shadow-lg transition-all duration-300">
+                <CardHeader>
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-muted group-hover:bg-green-500/10 transition-colors">
+                    <feature.icon className="h-6 w-6 text-muted-foreground group-hover:text-green-600 transition-colors" />
+                  </div>
+                  <CardTitle className="text-xl">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-base leading-relaxed">{feature.description}</CardDescription>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* AI Features Section */}
+        <section id="ai-features" className="border-y bg-muted/30">
+          <div className="container py-24 md:py-32">
+            <div className="mx-auto flex max-w-[980px] flex-col items-center gap-4 text-center mb-16">
+              <Badge className="rounded-full bg-gradient-to-r from-green-600 to-emerald-500 text-white border-0 px-4 py-1.5">
+                <Brain className="mr-2 h-3.5 w-3.5" />
+                AI-Powered
+              </Badge>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+                Unique AI features you won't find elsewhere
+              </h2>
+              <p className="max-w-[700px] text-lg text-muted-foreground">
+                Go beyond basic receipt tracking. Our custom neural network and AI models 
+                provide insights that transform how you understand spending.
+              </p>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-2 max-w-5xl mx-auto">
+              {[
+                {
+                  icon: Brain,
+                  title: "Mood Analysis",
+                  description: "Discover the emotional patterns behind your purchases. Our AI detects stress spending, retail therapy, and celebratory purchases.",
+                  href: "/app/mood-analysis",
+                  color: "from-purple-500 to-pink-500"
+                },
+                {
+                  icon: Sparkles,
+                  title: "Neural Spending Predictor",
+                  description: "Our custom-built neural network (no external APIs!) predicts your next purchase, weekly spending, and identifies savings opportunities.",
+                  href: "/app/neural-insights",
+                  color: "from-blue-500 to-cyan-500"
+                },
+                {
+                  icon: Leaf,
+                  title: "Carbon Footprint Tracker",
+                  description: "Track the environmental impact of your purchases. Get sustainability scores and suggestions for eco-friendly alternatives.",
+                  href: "/app/carbon-tracker",
+                  color: "from-green-500 to-emerald-500"
+                },
+                {
+                  icon: LineChart,
+                  title: "Spending DNA",
+                  description: "Uncover your unique financial fingerprint. See patterns, habits, and tendencies that define your spending personality.",
+                  href: "/app/spending-dna",
+                  color: "from-orange-500 to-red-500"
+                }
+              ].map((feature, index) => (
+                <Card key={index} className="group relative overflow-hidden border-2 hover:border-green-500/50 bg-card transition-all duration-300">
+                  <div className={`absolute top-0 right-0 w-40 h-40 bg-gradient-to-br ${feature.color} opacity-5 rounded-bl-full`} />
+                  <CardHeader>
+                    <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br ${feature.color}`}>
+                      <feature.icon className="h-6 w-6 text-white" />
+                    </div>
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      {feature.title}
+                      <ChevronRight className="h-4 w-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <CardDescription className="text-base leading-relaxed">{feature.description}</CardDescription>
+                    <Button variant="outline" size="sm" asChild className="group-hover:bg-green-500/10 group-hover:border-green-500/50 transition-colors">
+                      <Link href={feature.href}>
+                        Explore Feature
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* How It Works */}
+        <section className="container py-24 md:py-32">
+          <div className="mx-auto flex max-w-[980px] flex-col items-center gap-4 text-center mb-16">
+            <Badge variant="outline" className="rounded-full px-4 py-1.5">How It Works</Badge>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+              Three simple steps to financial clarity
+            </h2>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-3 max-w-4xl mx-auto">
+            {[
+              {
+                step: "1",
+                icon: Upload,
+                title: "Upload",
+                description: "Snap a photo or upload receipt images. Our OCR handles crumpled, faded, or blurry receipts."
+              },
+              {
+                step: "2",
+                icon: Zap,
+                title: "Extract",
+                description: "AI automatically extracts all details—merchant, items, amounts, taxes, and more."
+              },
+              {
+                step: "3",
+                icon: LineChart,
+                title: "Analyze",
+                description: "Get instant insights, spending trends, and AI-powered recommendations."
+              }
+            ].map((step, index) => (
+              <div key={index} className="relative text-center group">
+                <div className="mb-6 mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-muted group-hover:bg-green-500/10 transition-colors">
+                  <step.icon className="h-10 w-10 text-muted-foreground group-hover:text-green-600 transition-colors" />
                 </div>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
+                <div className="absolute -top-2 -left-2 flex h-8 w-8 items-center justify-center rounded-full bg-green-600 text-white text-sm font-bold">
+                  {step.step}
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
+                <p className="text-muted-foreground leading-relaxed">{step.description}</p>
+                {index < 2 && (
+                  <ChevronRight className="hidden md:block absolute top-10 -right-6 h-8 w-8 text-muted-foreground/30" />
+                )}
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Marquee - Customer Testimonials */}
-      <section className="py-16 bg-muted/30 relative overflow-hidden">
-        <div className="container mx-auto mb-12">
-          <p className="text-center text-sm text-muted-foreground uppercase tracking-wider font-medium">
-            What Our Customers Say
-          </p>
-          <h2 className="text-center text-3xl font-bold mt-2">
-            Loved by <span className="text-green-500">Thousands</span> of Users
-          </h2>
-        </div>
-        <div className="relative">
-          {/* Heavy blur gradients on both ends - making edges completely invisible */}
-          <div className="absolute left-0 top-0 bottom-0 w-64 md:w-96 bg-gradient-to-r from-[hsl(var(--muted)/0.3)] via-[hsl(var(--muted)/0.3)] via-40% to-transparent z-10 pointer-events-none backdrop-blur-sm" />
-          <div className="absolute right-0 top-0 bottom-0 w-64 md:w-96 bg-gradient-to-l from-[hsl(var(--muted)/0.3)] via-[hsl(var(--muted)/0.3)] via-40% to-transparent z-10 pointer-events-none backdrop-blur-sm" />
-          
-          <Marquee pauseOnHover className="[--duration:40s] py-4">
-            {[
-              { 
-                name: "Sarah Johnson", 
-                role: "Small Business Owner",
-                text: "LedgerMind saved me hours every week! The AI categorization is incredibly accurate.",
-                rating: 5,
-                avatar: "S"
-              },
-              { 
-                name: "Michael Chen", 
-                role: "Freelance Designer",
-                text: "Finally, a receipt tracker that actually understands my spending patterns. Game changer!",
-                rating: 5,
-                avatar: "M"
-              },
-              { 
-                name: "Emily Rodriguez", 
-                role: "Accountant",
-                text: "The export features make tax season so much easier. Highly recommend!",
-                rating: 5,
-                avatar: "E"
-              },
-              { 
-                name: "David Park", 
-                role: "Startup Founder",
-                text: "The spending DNA feature helped me understand my financial habits better than any app.",
-                rating: 5,
-                avatar: "D"
-              },
-              { 
-                name: "Lisa Thompson", 
-                role: "Project Manager",
-                text: "I love the mood analysis! It really opened my eyes to emotional spending.",
-                rating: 5,
-                avatar: "L"
-              },
-              { 
-                name: "James Wilson", 
-                role: "Restaurant Owner",
-                text: "Processing 100+ receipts weekly is now effortless. The OCR accuracy is unmatched.",
-                rating: 5,
-                avatar: "J"
-              },
-              { 
-                name: "Amanda Foster", 
-                role: "Financial Advisor",
-                text: "I recommend LedgerMind to all my clients. The insights are invaluable.",
-                rating: 5,
-                avatar: "A"
-              },
-              { 
-                name: "Robert Kim", 
-                role: "E-commerce Seller",
-                text: "The natural language search is amazing. I just ask questions and get instant answers!",
-                rating: 5,
-                avatar: "R"
-              },
-            ].map((testimonial, idx) => (
-              <div key={idx} className="mx-4 flex items-center justify-center">
-                <Card className="min-w-[320px] max-w-[320px] border-2 border-muted hover:border-green-500/50 bg-background/80 backdrop-blur transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-500/20">
-                  <CardContent className="p-6 space-y-4">
-                    {/* Quote Icon */}
-                    <Quote className="w-8 h-8 text-green-500/30" />
-                    
-                    {/* Testimonial Text */}
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      "{testimonial.text}"
-                    </p>
-                    
-                    {/* Rating Stars */}
-                    <div className="flex gap-1">
+        {/* Testimonials */}
+        <section id="testimonials" className="border-y bg-muted/30">
+          <div className="container py-24 md:py-32">
+            <div className="mx-auto flex max-w-[980px] flex-col items-center gap-4 text-center mb-16">
+              <Badge variant="outline" className="rounded-full px-4 py-1.5">Testimonials</Badge>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+                Loved by thousands of users
+              </h2>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+              {[
+                {
+                  quote: "LedgerMind transformed how I handle business expenses. The AI categorization is incredibly accurate.",
+                  author: "Sarah Chen",
+                  role: "Freelance Designer",
+                  rating: 5
+                },
+                {
+                  quote: "The neural spending predictor is mind-blowing. It predicted my grocery spending for the week within $5!",
+                  author: "Michael Torres",
+                  role: "Software Engineer",
+                  rating: 5
+                },
+                {
+                  quote: "Finally, a receipt app that actually understands my spending patterns. The mood analysis feature is genius.",
+                  author: "Emily Watson",
+                  role: "Marketing Manager",
+                  rating: 5
+                },
+                {
+                  quote: "I've tried every expense tracker out there. LedgerMind is the only one that makes me actually want to track receipts.",
+                  author: "David Kim",
+                  role: "Small Business Owner",
+                  rating: 5
+                },
+                {
+                  quote: "The carbon footprint tracker helped me reduce my environmental impact. Love the eco-friendly suggestions!",
+                  author: "Jessica Martinez",
+                  role: "Environmental Consultant",
+                  rating: 5
+                },
+                {
+                  quote: "Setup took 2 minutes. First receipt scanned in under 10 seconds. This is how all software should work.",
+                  author: "Robert Singh",
+                  role: "Product Manager",
+                  rating: 5
+                }
+              ].map((testimonial, index) => (
+                <Card key={index} className="bg-card">
+                  <CardContent className="pt-6">
+                    <div className="flex gap-1 mb-4">
                       {Array.from({ length: testimonial.rating }).map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                        <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                       ))}
                     </div>
-                    
-                    {/* Author */}
-                    <div className="flex items-center gap-3 pt-2 border-t">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
-                        <span className="text-sm font-bold text-white">{testimonial.avatar}</span>
+                    <p className="text-muted-foreground mb-6 leading-relaxed">"{testimonial.quote}"</p>
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-semibold text-sm">
+                        {testimonial.author.split(' ').map(n => n[0]).join('')}
                       </div>
                       <div>
-                        <h4 className="font-semibold text-sm">{testimonial.name}</h4>
+                        <p className="font-medium text-sm">{testimonial.author}</p>
                         <p className="text-xs text-muted-foreground">{testimonial.role}</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              </div>
-            ))}
-          </Marquee>
-        </div>
-      </section>
+              ))}
+            </div>
+          </div>
+        </section>
 
-      {/* Features Section - Clean Grid Layout */}
-      <section ref={featuresRef} className="px-4 py-20 relative">
-        <div className="container mx-auto max-w-7xl">
-          <div className="text-center mb-16 space-y-4">
-            <Badge className="bg-green-500/20 text-green-500 border-green-500/50 px-5 py-2.5 text-sm font-medium">
-              <Sparkles className="w-4 h-4 mr-2 inline" />
-              Powerful Features
-            </Badge>
-            <h2 className="text-5xl md:text-6xl font-black tracking-tight">
-              Everything You Need,
-              <br />
-              <span className="bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">
-                All in One Place
-              </span>
+        {/* FAQ Section */}
+        <section id="faq" className="container py-24 md:py-32">
+          <div className="mx-auto flex max-w-[980px] flex-col items-center gap-4 text-center mb-16">
+            <Badge variant="outline" className="rounded-full px-4 py-1.5">FAQ</Badge>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+              Frequently asked questions
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Powerful AI technology meets intuitive design for seamless receipt management
-            </p>
           </div>
 
-          {/* Clean Features Grid - 3 columns */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="max-w-3xl mx-auto space-y-4">
             {[
               {
-                icon: Brain,
-                title: "AI-Powered OCR",
-                description: "Extract text from receipts instantly with cutting-edge AI technology. Handles multiple formats and languages.",
-                gradient: "from-blue-500 to-cyan-500",
+                q: "How accurate is the OCR scanning?",
+                a: "Our AI achieves 98% accuracy on clear receipts and 94% on damaged or low-quality images. You can always edit extracted data if needed."
               },
               {
-                icon: Zap,
-                title: "Lightning Fast",
-                description: "Process receipts in under 3 seconds with our optimized infrastructure and cloud processing.",
-                gradient: "from-yellow-500 to-orange-500",
+                q: "Is my financial data secure?",
+                a: "Absolutely. We use bank-grade AES-256 encryption, and your data is never sold or shared. You can delete your data anytime."
               },
               {
-                icon: Shield,
-                title: "98% Accurate",
-                description: "Industry-leading accuracy in text extraction and automatic categorization with AI.",
-                gradient: "from-green-500 to-emerald-500",
+                q: "Does the neural network use external APIs?",
+                a: "No! Our neural spending predictor is built from scratch using pure TypeScript—no TensorFlow, PyTorch, or external AI services. Your data never leaves our servers."
               },
               {
-                icon: TrendingUp,
-                title: "Smart Analytics",
-                description: "Get actionable insights into your spending patterns with intelligent data visualization.",
-                gradient: "from-purple-500 to-pink-500",
+                q: "Can I export my data?",
+                a: "Yes. Export to CSV, PDF reports, or JSON at any time. Your data belongs to you."
               },
               {
-                icon: FileCheck,
-                title: "Auto Categorization",
-                description: "Automatically categorize expenses with machine learning. Save hours of manual work.",
-                gradient: "from-red-500 to-rose-500",
-              },
-              {
-                icon: Sparkles,
-                title: "Natural Language",
-                description: "Query your receipts using plain English questions. No complex filters needed.",
-                gradient: "from-indigo-500 to-blue-500",
-              },
-              {
-                icon: Receipt,
-                title: "Easy Organization",
-                description: "Keep all your receipts organized in one secure, searchable place with cloud backup.",
-                gradient: "from-teal-500 to-green-500",
-              },
-              {
-                icon: Star,
-                title: "Export Reports",
-                description: "Generate PDF and CSV reports for accounting. Perfect for tax season and audits.",
-                gradient: "from-amber-500 to-yellow-500",
-              },
-              {
-                icon: Check,
-                title: "Bank-Grade Security",
-                description: "Your data is encrypted and stored with enterprise-level security standards.",
-                gradient: "from-green-600 to-emerald-700",
-              },
-            ].map((feature, index) => (
-              <Card 
-                key={index}
-                className="feature-card border-2 hover:border-green-500/50 transition-all duration-300 cursor-pointer group relative overflow-hidden"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
-                <CardHeader className="relative space-y-4">
-                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}>
-                    <feature.icon className="h-8 w-8 text-white" />
-                  </div>
-                  <CardTitle className="text-2xl">{feature.title}</CardTitle>
-                  <CardDescription className="text-base leading-relaxed">
-                    {feature.description}
-                  </CardDescription>
+                q: "Is there a mobile app?",
+                a: "LedgerMind is a progressive web app (PWA) that works beautifully on mobile browsers. Native apps are on our roadmap."
+              }
+            ].map((faq, index) => (
+              <Card key={index} className="bg-card">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold">{faq.q}</CardTitle>
                 </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground leading-relaxed">{faq.a}</p>
+                </CardContent>
               </Card>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA Section */}
-      <section className="px-4 py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10" />
-        <div className="container mx-auto relative z-10">
-          <Card className="border-2 border-green-500/50 bg-gradient-to-br from-green-950/50 to-emerald-950/50 backdrop-blur">
-            <CardContent className="text-center py-16 px-4 space-y-8">
-              <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
-                Ready to Transform Your Receipt Management?
+        {/* CTA Section */}
+        <section className="border-t bg-muted/30">
+          <div className="container py-24 md:py-32">
+            <div className="mx-auto flex max-w-[600px] flex-col items-center gap-4 text-center">
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                Ready to take control of your expenses?
               </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Join thousands of users who trust LedgerMind for their expense tracking
+              <p className="text-lg text-muted-foreground">
+                Join thousands of users who've simplified their receipt management with LedgerMind.
               </p>
-              <div className="flex justify-center pt-4">
-                <Button 
-                  onClick={handleGetStarted}
-                  size="lg" 
-                  className="gap-2 text-lg px-8 py-6 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-                >
-                  {isLoading ? "Loading..." : isAuthenticated ? "Go to Dashboard" : "Get Started"}
-                  <ArrowRight className="h-5 w-5" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+              <Button size="lg" className="gap-2 h-12 px-8 mt-4" onClick={handleGetStarted}>
+                {isLoading ? "Loading..." : isAuthenticated ? "Go to Dashboard" : "Get Started Free"}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </section>
+      </main>
 
       {/* Footer */}
-      <footer className="border-t mt-auto bg-muted/50">
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+      <footer className="border-t bg-background">
+        <div className="container py-12 md:py-16">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
-                  <Receipt className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="font-bold text-lg">LedgerMind</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Smart receipt management for modern businesses
+              <Link href="/" className="flex items-center gap-3">
+                <Image 
+                  src="/logo.png" 
+                  alt="LedgerMind" 
+                  width={32} 
+                  height={32}
+                  className="rounded-lg"
+                />
+                <span className="font-bold text-lg">LedgerMind</span>
+              </Link>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                AI-powered receipt management for modern teams and individuals.
               </p>
+              <div className="flex gap-4">
+                <Link href="https://github.com/theanarchist123/LedgerMind" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Github className="h-5 w-5" />
+                </Link>
+                <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Twitter className="h-5 w-5" />
+                </Link>
+              </div>
             </div>
-            <div className="space-y-3">
-              <h4 className="font-semibold">Product</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/features" className="hover:text-foreground transition-colors">Features</Link></li>
-                <li><Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
-                <li><Link href="/app/billing" className="hover:text-foreground transition-colors">Plans</Link></li>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Product</h4>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><Link href="#features" className="hover:text-foreground transition-colors">Features</Link></li>
+                <li><Link href="#ai-features" className="hover:text-foreground transition-colors">AI Features</Link></li>
+                <li><Link href="/app/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link></li>
               </ul>
             </div>
-            <div className="space-y-3">
-              <h4 className="font-semibold">Company</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/about" className="hover:text-foreground transition-colors">About</Link></li>
-                <li><Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
-                <li><Link href="/careers" className="hover:text-foreground transition-colors">Careers</Link></li>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Resources</h4>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><Link href="#faq" className="hover:text-foreground transition-colors">FAQ</Link></li>
+                <li><Link href="#" className="hover:text-foreground transition-colors">Documentation</Link></li>
+                <li><Link href="#" className="hover:text-foreground transition-colors">API Reference</Link></li>
               </ul>
             </div>
-            <div className="space-y-3">
-              <h4 className="font-semibold">Legal</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link></li>
-                <li><Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link></li>
-                <li><Link href="/security" className="hover:text-foreground transition-colors">Security</Link></li>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Legal</h4>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><Link href="#" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
+                <li><Link href="#" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
+                <li><Link href="#" className="hover:text-foreground transition-colors">Cookie Policy</Link></li>
               </ul>
             </div>
           </div>
-          <div className="border-t pt-8">
+          
+          <div className="mt-12 pt-8 border-t">
             <p className="text-center text-sm text-muted-foreground">
-              © 2025 LedgerMind. All rights reserved.
+              © {new Date().getFullYear()} LedgerMind. All rights reserved.
             </p>
           </div>
         </div>
