@@ -181,7 +181,7 @@ export async function learnFromCorrection({
   // Also update the receipt itself
   const receipts = db.collection("receipts")
   await receipts.updateOne(
-    { _id: receiptId, userId },
+    { _id: receiptId as any, userId },
     {
       $set: {
         category: newCategory,

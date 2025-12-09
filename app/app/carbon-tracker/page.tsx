@@ -125,7 +125,7 @@ export default function CarbonFootprintPage() {
             <CardTitle className="text-lg">Total CO2 Emissions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold">{analysis?.totalCO2kg || 0} kg</div>
+            <div className="text-4xl font-bold truncate">{(analysis?.totalCO2kg || 0).toFixed(2)} kg</div>
             <p className="text-sm text-muted-foreground mt-2">This month</p>
           </CardContent>
         </Card>
@@ -139,8 +139,8 @@ export default function CarbonFootprintPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold text-green-500">
-              {analysis?.treesEquivalent || 0}
+            <div className="text-4xl font-bold text-green-500 truncate">
+              {Math.ceil(analysis?.treesEquivalent || 0)}
             </div>
             <p className="text-sm text-muted-foreground mt-2">Trees needed</p>
           </CardContent>
@@ -153,13 +153,13 @@ export default function CarbonFootprintPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="flex items-baseline justify-between">
-                <span className={`text-4xl font-bold ${getEcoScoreColor(analysis?.ecoScore || 0)}`}>
-                  {analysis?.ecoScore || 0}
+              <div className="flex items-baseline justify-between gap-2">
+                <span className={`text-4xl font-bold truncate ${getEcoScoreColor(analysis?.ecoScore || 0)}`}>
+                  {(analysis?.ecoScore || 0).toFixed(2)}
                 </span>
-                <Badge variant="outline">{getEcoScoreLabel(analysis?.ecoScore || 0)}</Badge>
+                <Badge variant="outline" className="shrink-0">{getEcoScoreLabel(analysis?.ecoScore || 0)}</Badge>
               </div>
-              <Progress value={analysis?.ecoScore || 0} className="h-2" />
+              <Progress value={Math.min(100, analysis?.ecoScore || 0)} className="h-2" />
             </div>
           </CardContent>
         </Card>

@@ -142,7 +142,7 @@ export default function NeuralInsightsPage() {
     )
   }
 
-  if (!prediction?.success) {
+  if (!prediction?.success || !prediction?.prediction) {
     return (
       <div className="container mx-auto p-6">
         <Card className="border-2 border-dashed">
@@ -165,6 +165,23 @@ export default function NeuralInsightsPage() {
   }
 
   const { prediction: pred, model } = prediction
+  
+  // Safety check for pred values
+  if (!pred) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card className="border-2 border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
+            <Brain className="h-16 w-16 text-muted-foreground" />
+            <h2 className="text-2xl font-bold">No Predictions Available</h2>
+            <p className="text-muted-foreground text-center max-w-md">
+              Unable to generate predictions. Please upload more receipts.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -203,7 +220,7 @@ export default function NeuralInsightsPage() {
             <div className="flex items-center gap-4">
               <Zap className="h-5 w-5 text-purple-500" />
               <span className="text-sm">
-                Neural network trained on <strong>{model.dataPoints}</strong> data points
+                Neural network trained on <strong>{model?.dataPoints || 0}</strong> data points
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -226,11 +243,11 @@ export default function NeuralInsightsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-500">
-              ${pred.predictedAmount.toFixed(2)}
+            <div className="text-3xl font-bold text-green-500 truncate">
+              ${(pred.predictedAmount || 0).toFixed(2)}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              {pred.predictedCategory}
+            <p className="text-sm text-muted-foreground mt-1 truncate">
+              {pred.predictedCategory || 'Other'}
             </p>
           </CardContent>
         </Card>
@@ -245,10 +262,10 @@ export default function NeuralInsightsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-500">
-              {(pred.confidence * 100).toFixed(0)}%
+            <div className="text-3xl font-bold text-blue-500 truncate">
+              {((pred.confidence || 0) * 100).toFixed(0)}%
             </div>
-            <Progress value={pred.confidence * 100} className="mt-2 h-2" />
+            <Progress value={(pred.confidence || 0) * 100} className="mt-2 h-2" />
           </CardContent>
         </Card>
 
@@ -262,12 +279,12 @@ export default function NeuralInsightsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-purple-500">
-              ${pred.nextWeekEstimate.toFixed(2)}
+            <div className="text-3xl font-bold text-purple-500 truncate">
+              ${(pred.nextWeekEstimate || 0).toFixed(2)}
             </div>
             <div className="flex items-center gap-1 mt-1">
-              {getTrendIcon(pred.trend)}
-              <span className="text-sm text-muted-foreground capitalize">{pred.trend}</span>
+              {getTrendIcon(pred.trend || 'stable')}
+              <span className="text-sm text-muted-foreground capitalize">{pred.trend || 'stable'}</span>
             </div>
           </CardContent>
         </Card>
@@ -282,8 +299,8 @@ export default function NeuralInsightsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-emerald-500">
-              ${pred.savingsOpportunity.toFixed(2)}
+            <div className="text-3xl font-bold text-emerald-500 truncate">
+              ${(pred.savingsOpportunity || 0).toFixed(2)}
             </div>
             <p className="text-sm text-muted-foreground mt-1">
               Potential monthly savings
@@ -344,9 +361,9 @@ export default function NeuralInsightsPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Financial Risk Level</span>
-                <Badge className={getRiskColor(pred.riskLevel)}>
-                  {getRiskIcon(pred.riskLevel)}
-                  <span className="ml-1 capitalize">{pred.riskLevel}</span>
+                <Badge className={getRiskColor(pred.riskLevel || 'low')}>
+                  {getRiskIcon(pred.riskLevel || 'low')}
+                  <span className="ml-1 capitalize">{pred.riskLevel || 'low'}</span>
                 </Badge>
               </div>
               <div className="space-y-2">
@@ -359,7 +376,7 @@ export default function NeuralInsightsPage() {
                   <div 
                     className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full border-2 border-gray-800 shadow-lg transition-all duration-500"
                     style={{
-                      left: pred.riskLevel === "low" ? "10%" : pred.riskLevel === "medium" ? "50%" : "90%",
+                      left: (pred.riskLevel || 'low') === "low" ? "10%" : (pred.riskLevel || 'low') === "medium" ? "50%" : "90%",
                       transform: "translate(-50%, -50%)"
                     }}
                   />
@@ -372,9 +389,9 @@ export default function NeuralInsightsPage() {
               <span className="text-sm font-medium">Most Likely Next Category</span>
               <div className="p-4 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30">
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold">{pred.predictedCategory}</span>
+                  <span className="text-lg font-semibold">{pred.predictedCategory || 'Other'}</span>
                   <Badge variant="secondary">
-                    {(pred.confidence * 100).toFixed(0)}% confident
+                    {((pred.confidence || 0) * 100).toFixed(0)}% confident
                   </Badge>
                 </div>
               </div>
@@ -395,7 +412,7 @@ export default function NeuralInsightsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {pred.insights.map((insight, index) => (
+              {(pred.insights || []).map((insight, index) => (
                 <div 
                   key={index}
                   className="flex items-start gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
@@ -417,9 +434,9 @@ export default function NeuralInsightsPage() {
                 Recommended Action
               </h4>
               <p className="text-sm text-muted-foreground mt-2">
-                {pred.riskLevel === "high" 
+                {(pred.riskLevel || 'low') === "high" 
                   ? "Consider reviewing your recent expenses and setting a stricter budget for non-essential categories."
-                  : pred.riskLevel === "medium"
+                  : (pred.riskLevel || 'low') === "medium"
                   ? "You're doing okay, but there's room for improvement. Try to reduce spending in your top category."
                   : "Excellent financial discipline! Keep up the good work and consider investing your savings."}
               </p>

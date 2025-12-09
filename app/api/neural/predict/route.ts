@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     // Fetch user's receipts
     const client = await clientPromise
     const db = client.db(process.env.MONGODB_DB || "ledgermind")
-    const receiptsCollection = db.collection(process.env.MONGODB_COLLECTION || "ledger")
+    const receiptsCollection = db.collection("receipts")
 
     const query = userId ? { userId } : {}
     const receipts = await receiptsCollection
@@ -70,7 +70,7 @@ export async function GET() {
   try {
     const client = await clientPromise
     const db = client.db(process.env.MONGODB_DB || "ledgermind")
-    const receiptsCollection = db.collection(process.env.MONGODB_COLLECTION || "ledger")
+    const receiptsCollection = db.collection("receipts")
 
     const receipts = await receiptsCollection
       .find({})
