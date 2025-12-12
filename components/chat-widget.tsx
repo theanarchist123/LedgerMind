@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Send, Sparkles, Loader2, MessageCircle, X, Minimize2 } from "lucide-react"
+import { Send, Sparkles, Loader2, MessageCircle, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -50,6 +50,7 @@ export function ChatWidget({ userId }: ChatWidgetProps) {
     setLoading(true)
 
     try {
+      // Call server API which uses Ollama Cloud
       const response = await fetch("/api/rag/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -128,10 +129,11 @@ export function ChatWidget({ userId }: ChatWidgetProps) {
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm">AI Assistant</h3>
-                  <p className="text-xs text-muted-foreground">Ask about your receipts</p>
+                  <p className="text-xs text-muted-foreground">Ollama Cloud • Fast AI</p>
                 </div>
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-2 items-center">
+                <Badge className="text-xs bg-green-600">Ready</Badge>
                 <Button
                   variant="ghost"
                   size="icon"

@@ -49,13 +49,11 @@ export function ReceiptChat({ userId }: ReceiptChatProps) {
     setLoading(true)
 
     try {
+      // Call server API which uses Ollama Cloud
       const response = await fetch("/api/rag/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          query: input,
-        }),
+        body: JSON.stringify({ userId, query: input }),
       })
 
       if (!response.ok) {
@@ -78,7 +76,7 @@ export function ReceiptChat({ userId }: ReceiptChatProps) {
         ...prev,
         {
           role: "assistant",
-          content: "Sorry, I encountered an error processing your request. Please try again.",
+          content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`,
         },
       ])
     } finally {
@@ -89,10 +87,15 @@ export function ReceiptChat({ userId }: ReceiptChatProps) {
   return (
     <Card className="h-[600px] flex flex-col">
       <CardHeader className="border-b">
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-green-500" />
-          Chat with Your Receipts
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-green-500" />
+            Chat with Your Receipts
+          </CardTitle>
+          <Badge variant="default" className="text-xs bg-green-600">
+            AI Ready
+          </Badge>
+        </div>
       </CardHeader>
 
       <ScrollArea className="flex-1 p-4">

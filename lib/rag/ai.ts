@@ -1,12 +1,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { extractTotalFromText } from "./ocr"
 
-// Provider configuration - Ollama is the default for everything
-const LLM_PROVIDER = (process.env.LLM_PROVIDER || "ollama").toLowerCase()
-const EMB_PROVIDER = (process.env.EMBEDDINGS_PROVIDER || "ollama").toLowerCase()
+// Provider configuration - Gemini is the default for everything
+const LLM_PROVIDER = (process.env.LLM_PROVIDER || "gemini").toLowerCase()
+const EMB_PROVIDER = (process.env.EMBEDDINGS_PROVIDER || "gemini").toLowerCase()
 
 // Ollama configuration - supports local or remote (cloud) Ollama instances
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://localhost:11434"
+const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY // Cloud Ollama API key
 const OLLAMA_LLM_MODEL = process.env.OLLAMA_LLM_MODEL || "llama3.2"
 const OLLAMA_EMBED_MODEL = process.env.OLLAMA_EMBED_MODEL || "nomic-embed-text"
 
@@ -18,6 +19,15 @@ const GEM_KEY = process.env.GOOGLE_API_KEY
 // Optional Gemini client (used only if GEM_KEY exists)
 const genAI = GEM_KEY ? new GoogleGenerativeAI(GEM_KEY) : null
 
+// Helper to build Ollama headers with auth
+function getOllamaHeaders(): HeadersInit {
+  const headers: HeadersInit = { "Content-Type": "application/json" }
+  if (OLLAMA_API_KEY) {
+    headers['Authorization'] = `Bearer ${OLLAMA_API_KEY}`
+  }
+  return headers
+}
+
 // Check if Ollama is available (with timeout)
 async function isOllamaAvailable(): Promise<boolean> {
   try {
@@ -25,7 +35,8 @@ async function isOllamaAvailable(): Promise<boolean> {
     const timeoutId = setTimeout(() => controller.abort(), 3000)
     
     const response = await fetch(`${OLLAMA_BASE_URL}/api/tags`, {
-      signal: controller.signal
+      signal: controller.signal,
+      headers: getOllamaHeaders()
     })
     clearTimeout(timeoutId)
     return response.ok
@@ -75,7 +86,7 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
             withRetry(async () => {
               const r = await fetch(`${OLLAMA_BASE_URL}/api/embeddings`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: getOllamaHeaders(),
                 body: JSON.stringify({ model: OLLAMA_EMBED_MODEL, prompt: text }),
               })
               if (!r.ok) throw new Error(`Ollama ${r.status}`)
@@ -134,7 +145,7 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
             withRetry(async () => {
               const r = await fetch(`${OLLAMA_BASE_URL}/api/embeddings`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: getOllamaHeaders(),
                 body: JSON.stringify({ model: OLLAMA_EMBED_MODEL, prompt: text }),
               })
               if (!r.ok) throw new Error(`Ollama ${r.status}`)
@@ -161,17 +172,23 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
 
 /**
  * Generate text with multi-provider fallback
- * Priority: Ollama (if configured) → Groq (cloud, fast) → Gemini (cloud) → Mock
+ * Priority: Ollama Cloud → Groq (cloud, fast) → Gemini (cloud) → Mock
  */
 export async function generateText(prompt: string): Promise<string> {
-  // 1) Try Ollama FIRST if it's the configured provider
-  if (LLM_PROVIDER === "ollama" && await isOllamaAvailable()) {
+  // 1) Try Ollama Cloud FIRST (if configured as provider and API key exists)
+  if (LLM_PROVIDER === "ollama" && OLLAMA_API_KEY) {
     try {
-      console.log(`Using Ollama for generation at ${OLLAMA_BASE_URL}...`)
+      console.log(`Using Ollama Cloud for generation at ${OLLAMA_BASE_URL}...`)
+      console.log(`Model: ${OLLAMA_LLM_MODEL}, API Key: ${OLLAMA_API_KEY.substring(0, 10)}...`)
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OLLAMA_API_KEY}`
+      }
+      
       const data = await withRetry(async () => {
         const r = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({
             model: OLLAMA_LLM_MODEL,
             prompt,
@@ -182,21 +199,41 @@ export async function generateText(prompt: string): Promise<string> {
           }),
         })
         if (!r.ok) {
-          if (r.status === 404) throw new Error(`Ollama model not found: ${OLLAMA_LLM_MODEL}`)
           const errText = await r.text()
-          throw new Error(`Ollama ${r.status}: ${errText}`)
+          throw new Error(`Ollama Cloud ${r.status}: ${errText}`)
         }
         return r.json()
       })
       const text = data.response ?? data.message?.content ?? ""
       if (text) return text.trim()
     } catch (e) {
-      console.warn("Ollama generation failed, falling back:", e)
+      console.warn("Ollama Cloud generation failed, falling back:", e)
     }
   }
 
-  // 2) Try Groq (free API, very fast)
-  if ((LLM_PROVIDER === "groq" || LLM_PROVIDER === "ollama") && GROQ_KEY) {
+  // 2) Try Gemini as fallback
+  if (GEM_KEY && genAI) {
+    try {
+      console.log("Using Gemini for generation...")
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash",
+        generationConfig: {
+          temperature: 0.1,
+          topP: 0.9,
+          maxOutputTokens: 2048,
+        },
+      })
+      
+      const result = await withRetry(() => model.generateContent(prompt))
+      const text = result.response.text()
+      if (text) return text.trim()
+    } catch (error) {
+      console.warn("Gemini generation failed:", error)
+    }
+  }
+
+  // 2) Try Groq as fallback (free API, very fast)
+  if (GROQ_KEY) {
     try {
       console.log("Using Groq for generation...")
       const data = await withRetry(async () => {
@@ -226,8 +263,8 @@ export async function generateText(prompt: string): Promise<string> {
     }
   }
 
-  // 3) Try Ollama as fallback (if not already tried)
-  if (LLM_PROVIDER !== "ollama" && await isOllamaAvailable()) {
+  // 3) Try Ollama as last resort (only if explicitly configured and available)
+  if (LLM_PROVIDER === "ollama" && await isOllamaAvailable()) {
     try {
       console.log(`Using Ollama for generation at ${OLLAMA_BASE_URL}...`)
       const data = await withRetry(async () => {
@@ -253,34 +290,13 @@ export async function generateText(prompt: string): Promise<string> {
       const text = data.response ?? data.message?.content ?? ""
       if (text) return text.trim()
     } catch (e) {
-      console.warn("Ollama fallback generation failed:", e)
+      console.warn("Ollama generation failed:", e)
     }
   }
 
-  // 4) Try Gemini (with retry/backoff) - only if not using Ollama as primary
-  if ((LLM_PROVIDER === "gemini" || LLM_PROVIDER === "groq") && GEM_KEY && genAI) {
-    try {
-      console.log("Using Gemini for generation...")
-      const model = genAI.getGenerativeModel({
-        model: "gemini-2.0-flash-exp",
-        generationConfig: {
-          temperature: 0.1,
-          topP: 0.9,
-          maxOutputTokens: 2048,
-        },
-      })
-      
-      const result = await withRetry(() => model.generateContent(prompt))
-      const text = result.response.text()
-      if (text) return text.trim()
-    } catch (error) {
-      console.warn("Gemini generation failed:", error)
-    }
-  }
-
-  // 5) Mock fallback
+  // 4) Mock fallback
   console.log("Using mock generation (all providers failed or unavailable)")
-  return "Mock response: Unable to connect to AI providers. Please ensure Ollama is running on http://localhost:11434 or configure Groq/Gemini API keys."
+  return "Mock response: Unable to connect to AI providers. Please ensure you have configured Gemini API key or Groq API key."
 }
 
 /**

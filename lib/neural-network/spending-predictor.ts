@@ -296,15 +296,15 @@ export class SpendingPredictor {
   /**
    * Get model info
    */
-  getModelInfo(): { trained: boolean; samples: number; accuracy: number } {
+  getModelInfo(): { trained: boolean; dataPoints: number; accuracy: string } {
     const lossHistory = this.network.getLossHistory()
     const lastLoss = lossHistory[lossHistory.length - 1] || 1
     const accuracy = Math.max(0, Math.min(100, (1 - lastLoss) * 100))
 
     return {
       trained: this.isInitialized,
-      samples: this.receipts.length,
-      accuracy: Math.round(accuracy)
+      dataPoints: this.receipts.length,
+      accuracy: `${Math.round(accuracy)}%`
     }
   }
 

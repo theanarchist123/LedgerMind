@@ -68,6 +68,8 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   try {
+    console.log("[neural/predict] Starting prediction generation...")
+    
     const client = await clientPromise
     const db = client.db(process.env.MONGODB_DB || "ledgermind")
     const receiptsCollection = db.collection("receipts")
@@ -78,7 +80,10 @@ export async function GET() {
       .limit(100)
       .toArray()
 
+    console.log(`[neural/predict] Found ${receipts.length} receipts in database`)
+
     if (receipts.length === 0) {
+      console.log("[neural/predict] No receipts found, returning empty prediction")
       return NextResponse.json({
         success: true,
         prediction: {
@@ -91,11 +96,17 @@ export async function GET() {
           riskLevel: "low",
           savingsOpportunity: 0
         },
-        model: { trained: false, samples: 0, accuracy: 0 },
+        model: { 
+          trained: false, 
+          dataPoints: 0, 
+          accuracy: "0%" 
+        },
         receiptsUsed: 0
       })
     }
 
+
+    console.log("[neural/predict] Initializing predictor...")
     const predictor = getSpendingPredictor()
     await predictor.initialize(receipts.map(r => ({
       _id: r._id?.toString(),
@@ -108,6 +119,8 @@ export async function GET() {
 
     const prediction = predictor.predict()
     const modelInfo = predictor.getModelInfo()
+
+  console.log(`[neural/predict] Prediction generated successfully. Model info:`, modelInfo)
 
     return NextResponse.json({
       success: true,
