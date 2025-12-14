@@ -9,6 +9,7 @@ export interface Receipt {
   _id?: string
   merchant: string
   total: number
+  totalINR?: number // INR-normalized amount (used for training if available)
   date: string | Date
   category: string
   userId?: string
@@ -92,13 +93,14 @@ export class SpendingPredictor {
       this.merchantFrequency.set(merchant, (this.merchantFrequency.get(merchant) || 0) + 1)
     }
 
-    // Category averages
+    // Category averages (use INR-normalized amounts if available)
     const categoryTotals: Map<string, { sum: number; count: number }> = new Map()
     for (const receipt of this.receipts) {
       const category = receipt.category || "Other"
+      const amount = receipt.totalINR ?? receipt.total // Prefer INR, fallback to original
       const existing = categoryTotals.get(category) || { sum: 0, count: 0 }
       categoryTotals.set(category, {
-        sum: existing.sum + receipt.total,
+        sum: existing.sum + amount,
         count: existing.count + 1
       })
     }
@@ -117,21 +119,26 @@ export class SpendingPredictor {
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     )
 
-    // Calculate max values for normalization
-    const maxAmount = Math.max(...this.receipts.map(r => r.total), 1)
-    const avgSpend = this.receipts.reduce((sum, r) => sum + r.total, 0) / this.receipts.length
+    // Use INR-normalized amounts for training
+    const amounts = sortedReceipts.map(r => r.totalINR ?? r.total)
+    const maxAmount = Math.max(...amounts, 1)
+    const avgSpend = amounts.reduce((sum, a) => sum + a, 0) / amounts.length
 
     for (let i = 1; i < sortedReceipts.length; i++) {
       const current = sortedReceipts[i]
       const prev = sortedReceipts[i - 1]
       const date = new Date(current.date)
+      
+      const currAmount = current.totalINR ?? current.total
+      const prevAmount = prev.totalINR ?? prev.total
 
       // Calculate trend (comparing to previous 3 receipts)
       let trend = 0
       if (i >= 3) {
-        const recentAvg = (sortedReceipts[i-1].total + sortedReceipts[i-2].total + sortedReceipts[i-3].total) / 3
+        const recentAmounts = [amounts[i-1], amounts[i-2], amounts[i-3]]
+        const recentAvg = recentAmounts.reduce((a, b) => a + b, 0) / 3
         const olderAvg = i >= 6 
-          ? (sortedReceipts[i-4].total + sortedReceipts[i-5].total + sortedReceipts[i-6].total) / 3
+          ? [amounts[i-4], amounts[i-5], amounts[i-6]].reduce((a, b) => a + b, 0) / 3
           : recentAvg
         trend = (recentAvg - olderAvg) / Math.max(olderAvg, 1)
       }
@@ -141,7 +148,7 @@ export class SpendingPredictor {
         date.getDay() / 6,                                                    // Day of week
         date.getHours() / 23,                                                 // Hour of day
         CATEGORIES.indexOf(current.category || "Other") / (CATEGORIES.length - 1), // Category encoded
-        prev.total / maxAmount,                                               // Previous amount
+        prevAmount / maxAmount,                                               // Previous amount
         avgSpend / maxAmount,                                                 // Average spending
         (this.merchantFrequency.get(current.merchant.toLowerCase()) || 1) / this.receipts.length, // Merchant frequency
         (trend + 1) / 2                                                       // Trend (-1 to 1 → 0 to 1)
@@ -149,7 +156,7 @@ export class SpendingPredictor {
 
       // Target outputs (normalized 0-1)
       const targets = [
-        current.total / maxAmount,                                            // Predicted amount
+        currAmount / maxAmount,                                               // Predicted amount
         CATEGORIES.indexOf(current.category || "Other") / (CATEGORIES.length - 1), // Category
         0.8 + Math.random() * 0.2                                             // Confidence (80-100%)
       ]
@@ -168,16 +175,19 @@ export class SpendingPredictor {
       return this.getFallbackPrediction()
     }
 
-    const maxAmount = Math.max(...this.receipts.map(r => r.total), 1)
-    const avgSpend = this.receipts.reduce((sum, r) => sum + r.total, 0) / this.receipts.length
+    // Use INR-normalized amounts for prediction
+    const amounts = this.receipts.map(r => r.totalINR ?? r.total)
+    const maxAmount = Math.max(...amounts, 1)
+    const avgSpend = amounts.reduce((sum, a) => sum + a, 0) / amounts.length
     const lastReceipt = this.receipts[this.receipts.length - 1]
+    const lastAmount = lastReceipt.totalINR ?? lastReceipt.total
 
-    // Calculate current trend
-    const recentReceipts = this.receipts.slice(-5)
-    const recentAvg = recentReceipts.reduce((sum, r) => sum + r.total, 0) / recentReceipts.length
-    const olderReceipts = this.receipts.slice(-10, -5)
-    const olderAvg = olderReceipts.length > 0
-      ? olderReceipts.reduce((sum, r) => sum + r.total, 0) / olderReceipts.length
+    // Calculate current trend using INR amounts
+    const recentAmounts = amounts.slice(-5)
+    const recentAvg = recentAmounts.reduce((sum, a) => sum + a, 0) / recentAmounts.length
+    const olderAmounts = amounts.slice(-10, -5)
+    const olderAvg = olderAmounts.length > 0
+      ? olderAmounts.reduce((sum, a) => sum + a, 0) / olderAmounts.length
       : recentAvg
     const trend = (recentAvg - olderAvg) / Math.max(olderAvg, 1)
 
@@ -187,7 +197,7 @@ export class SpendingPredictor {
       (context?.dayOfWeek ?? now.getDay()) / 6,
       (context?.hourOfDay ?? now.getHours()) / 23,
       CATEGORIES.indexOf(context?.category || lastReceipt.category || "Other") / (CATEGORIES.length - 1),
-      lastReceipt.total / maxAmount,
+      lastAmount / maxAmount,
       avgSpend / maxAmount,
       0.5, // Average merchant frequency
       (trend + 1) / 2
@@ -206,9 +216,9 @@ export class SpendingPredictor {
     else if (trend < -0.1) trendDirection = "decreasing"
     else trendDirection = "stable"
 
-    // Calculate next week estimate
+    // Calculate next week estimate using INR amounts
     const weeklySpendRate = this.receipts.length > 7
-      ? this.receipts.slice(-7).reduce((sum, r) => sum + r.total, 0)
+      ? amounts.slice(-7).reduce((sum, a) => sum + a, 0)
       : avgSpend * 7
     const nextWeekEstimate = weeklySpendRate * (1 + trend * 0.5)
 
@@ -277,8 +287,10 @@ export class SpendingPredictor {
    * Fallback prediction when not enough data
    */
   private getFallbackPrediction(): SpendingPrediction {
-    const avg = this.receipts.length > 0
-      ? this.receipts.reduce((sum, r) => sum + r.total, 0) / this.receipts.length
+    // Use INR-normalized amounts for fallback as well
+    const amounts = this.receipts.map(r => r.totalINR ?? r.total)
+    const avg = amounts.length > 0
+      ? amounts.reduce((sum, a) => sum + a, 0) / amounts.length
       : 50
 
     return {

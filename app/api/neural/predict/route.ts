@@ -31,12 +31,13 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Initialize and train predictor
+    // Initialize and train predictor with INR-normalized amounts
     const predictor = getSpendingPredictor()
     await predictor.initialize(receipts.map(r => ({
       _id: r._id?.toString(),
       merchant: r.merchant || "Unknown",
       total: r.total || 0,
+      totalINR: r.totalINR || r.total || 0, // Use INR-normalized amount if available
       date: r.date,
       category: r.category || "Other",
       userId: r.userId
@@ -112,6 +113,7 @@ export async function GET() {
       _id: r._id?.toString(),
       merchant: r.merchant || "Unknown",
       total: r.total || 0,
+      totalINR: r.totalINR || r.total || 0, // Use INR-normalized amount if available
       date: r.date,
       category: r.category || "Other",
       userId: r.userId

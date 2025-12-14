@@ -71,20 +71,20 @@ export async function analyzeMoodPatterns(
   const timePatterns = analyzeTimeOfDay(receipts)
   const dayPatterns = analyzeDayOfWeek(receipts)
   
-  // Late night spending (10 PM - 2 AM)
+  // Late night spending (10 PM - 2 AM) - use INR-normalized amounts
   const lateNightReceipts = receipts.filter(r => {
     const hour = new Date(r.createdAt).getHours()
     return hour >= 22 || hour <= 2
   })
-  const lateNightTotal = lateNightReceipts.reduce((sum, r) => sum + (r.total || 0), 0)
-  const totalSpent = receipts.reduce((sum, r) => sum + (r.total || 0), 0)
+  const lateNightTotal = lateNightReceipts.reduce((sum, r) => sum + (r.totalINR ?? r.total ?? 0), 0)
+  const totalSpent = receipts.reduce((sum, r) => sum + (r.totalINR ?? r.total ?? 0), 0)
 
-  // Weekend spending
+  // Weekend spending - use INR-normalized amounts
   const weekendReceipts = receipts.filter(r => {
     const day = new Date(r.createdAt).getDay()
     return day === 0 || day === 6
   })
-  const weekendTotal = weekendReceipts.reduce((sum, r) => sum + (r.total || 0), 0)
+  const weekendTotal = weekendReceipts.reduce((sum, r) => sum + (r.totalINR ?? r.total ?? 0), 0)
 
   // Calculate stress spending score
   const stressSpendingScore = calculateStressScore(receipts, timePatterns)
@@ -139,7 +139,7 @@ function analyzeTimeOfDay(receipts: ReceiptDoc[]): TimePattern[] {
       patterns[hour] = { hour, count: 0, totalSpent: 0, avgAmount: 0 }
     }
     patterns[hour].count++
-    patterns[hour].totalSpent += receipt.total || 0
+    patterns[hour].totalSpent += receipt.totalINR ?? receipt.total ?? 0 // Use INR-normalized amount
   }
 
   return Object.values(patterns).map(p => ({
@@ -158,7 +158,7 @@ function analyzeDayOfWeek(receipts: ReceiptDoc[]) {
       patterns[day] = { count: 0, totalSpent: 0 }
     }
     patterns[day].count++
-    patterns[day].totalSpent += receipt.total || 0
+    patterns[day].totalSpent += receipt.totalINR ?? receipt.total ?? 0 // Use INR-normalized amount
   }
 
   return Object.entries(patterns).map(([day, data]) => ({
@@ -181,8 +181,8 @@ function calculateStressScore(receipts: ReceiptDoc[], timePatterns: TimePattern[
     score += (lateNightCount / receipts.length) * 40
   }
 
-  // Frequent small purchases (stress buying)
-  const smallPurchases = receipts.filter(r => (r.total || 0) < 20).length
+  // Frequent small purchases (stress buying) - use INR thresholds
+  const smallPurchases = receipts.filter(r => (r.totalINR ?? r.total ?? 0) < 1665).length // ~$20 in INR
   if (receipts.length > 0) {
     score += (smallPurchases / receipts.length) * 30
   }
@@ -202,10 +202,10 @@ function calculateStressScore(receipts: ReceiptDoc[], timePatterns: TimePattern[
 function calculateImpulseScore(receipts: ReceiptDoc[]): number {
   let score = 0
 
-  // Large purchases in Entertainment/Shopping
+  // Large purchases in Entertainment/Shopping - use INR thresholds
   const impulseCategories = ["Shopping", "Entertainment"]
   const impulsePurchases = receipts.filter(
-    r => impulseCategories.includes(r.category || "") && (r.total || 0) > 50
+    r => impulseCategories.includes(r.category || "") && (r.totalINR ?? r.total ?? 0) > 4165 // ~$50 in INR
   )
   
   if (receipts.length > 0) {

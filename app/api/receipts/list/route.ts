@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         
         return {
           _id: r._id,
-          receiptId: r._id, // Use _id as receiptId for the frontend
+          receiptId: r._id,
           merchant: r.merchant || "Unknown Merchant",
           date: displayDate,
           total: r.total || 0,
@@ -44,7 +44,11 @@ export async function GET(request: NextRequest) {
           categoryMethod: r.categoryMethod,
           categorySuggestion: r.categorySuggestion,
           status: r.status,
-          currency: r.currency || "USD",
+          currency: r.currency || "UNKNOWN",
+          currencyConfidence: r.currencyConfidence || 0,
+          currencySignals: r.currencySignals || [],
+          totalINR: r.totalINR || (r.total || 0),
+          fxRateToINR: r.fxRateToINR || 1,
           confidence: r.confidence || 0,
           qaScore: r.qaScore,
           qaIssues: r.qaIssues,

@@ -180,8 +180,8 @@ function isLikelyRegret(receipt: ReceiptDoc): boolean {
   const impulseCategories = ["Shopping", "Entertainment", "Electronics"]
   const isImpulseCategory = impulseCategories.includes(receipt.category || "")
   
-  // Large purchases in impulse categories
-  if (isImpulseCategory && (receipt.total || 0) > 100) return true
+  // Large purchases in impulse categories - use INR threshold (~$100 = 8350 INR)
+  if (isImpulseCategory && (receipt.totalINR ?? receipt.total ?? 0) > 8350) return true
   
   // Low confidence AI categorization (might be wrong purchase)
   if ((receipt.categoryConfidence || 0) < 0.5) return true

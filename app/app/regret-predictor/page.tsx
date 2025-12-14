@@ -161,7 +161,7 @@ export default function RegretPredictorPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              ${analysis?.averageRegretAmount?.toFixed(2) || 0}
+              ₹{analysis?.averageRegretAmount?.toFixed(2) || 0}
             </div>
             <p className="text-sm text-muted-foreground">per purchase</p>
           </CardContent>
@@ -194,7 +194,7 @@ export default function RegretPredictorPage() {
                   <p className="text-sm text-orange-500 mt-1">⚠️ {purchase.reason}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-bold">${purchase.amount.toFixed(2)}</p>
+                  <p className="text-xl font-bold">₹{purchase.amount.toFixed(2)}</p>
                   <p className="text-sm text-muted-foreground">{purchase.date}</p>
                   <div className="flex items-center gap-1 mt-2">
                     <span className="text-sm">Regret:</span>
@@ -255,7 +255,7 @@ export default function RegretPredictorPage() {
                   </div>
                   <p className="text-sm text-muted-foreground">{regret.usageFrequency}</p>
                 </div>
-                <p className="font-bold text-red-500">${regret.amount.toFixed(2)}</p>
+                <p className="font-bold text-red-500">₹{regret.amount.toFixed(2)}</p>
               </div>
             ))}
           </CardContent>

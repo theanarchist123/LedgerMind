@@ -44,8 +44,8 @@ export function exportToCSV(receipts: ReceiptData[], filename: string = 'receipt
     new Date(receipt.date || receipt.createdAt).toLocaleDateString(),
     receipt.merchant || 'Unknown',
     receipt.category || 'Uncategorized',
-    `$${(receipt.total || 0).toFixed(2)}`,
-    `$${(receipt.tax || 0).toFixed(2)}`,
+    `₹${(receipt.total || 0).toFixed(2)}`,
+    `₹${(receipt.tax || 0).toFixed(2)}`,
     `${receipt.confidence || 0}%`,
     receipt.items?.length || 0
   ])
@@ -101,7 +101,7 @@ export function exportToPDF(
 
   doc.setFontSize(10)
   doc.text(`Total Receipts: ${analytics.receiptsProcessed}`, 14, 50)
-  doc.text(`Total Spent: $${analytics.totalSpent.toFixed(2)}`, 14, 56)
+  doc.text(`Total Spent: ₹${analytics.totalSpent.toFixed(2)}`, 14, 56)
   doc.text(`Categories: ${analytics.categoriesCount}`, 14, 62)
   doc.text(`Avg. Confidence: ${analytics.averageConfidence}%`, 14, 68)
 
@@ -110,8 +110,8 @@ export function exportToPDF(
     new Date(receipt.date || receipt.createdAt).toLocaleDateString(),
     receipt.merchant || 'Unknown',
     receipt.category || 'Uncategorized',
-    `$${(receipt.total || 0).toFixed(2)}`,
-    `$${(receipt.tax || 0).toFixed(2)}`,
+    `₹${(receipt.total || 0).toFixed(2)}`,
+    `₹${(receipt.tax || 0).toFixed(2)}`,
     `${receipt.confidence || 0}%`
   ])
 
@@ -175,7 +175,7 @@ export function exportTaxReport(
   doc.text('Overall Summary', 14, 48)
 
   doc.setFontSize(10)
-  doc.text(`Total Business Expenses: $${analytics.totalSpent.toFixed(2)}`, 14, 56)
+  doc.text(`Total Business Expenses: ₹${analytics.totalSpent.toFixed(2)}`, 14, 56)
   doc.text(`Total Receipts: ${analytics.receiptsProcessed}`, 14, 62)
   doc.text(`Number of Categories: ${analytics.categoriesCount}`, 14, 68)
 
@@ -186,7 +186,7 @@ export function exportTaxReport(
   const categoryData = analytics.categoryBreakdown.map(cat => [
     cat.category,
     cat.count.toString(),
-    `$${cat.amount.toFixed(2)}`,
+    `₹${cat.amount.toFixed(2)}`,
     `${cat.percentage.toFixed(1)}%`
   ])
 

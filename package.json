@@ -32,7 +32,9 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "migrate:currencies": "tsx scripts/migrate-currencies.ts",
+    "migrate:status": "tsx scripts/check-migration-status.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -79,10 +81,12 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.20",
+    "dotenv": "^17.2.3",
     "eslint": "^8",
     "eslint-config-next": "^15.1.9",
     "postcss": "^8",
     "tailwindcss": "^3.4.14",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

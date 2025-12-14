@@ -1,15 +1,15 @@
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { extractTotalFromText } from "./ocr"
 
-// Provider configuration - Gemini is the default for everything
-const LLM_PROVIDER = (process.env.LLM_PROVIDER || "gemini").toLowerCase()
-const EMB_PROVIDER = (process.env.EMBEDDINGS_PROVIDER || "gemini").toLowerCase()
+// Provider configuration - Ollama Cloud is the default for everything
+const LLM_PROVIDER = (process.env.LLM_PROVIDER || "ollama").toLowerCase()
+const EMB_PROVIDER = (process.env.EMBEDDINGS_PROVIDER || "ollama").toLowerCase()
 
 // Ollama configuration - supports local or remote (cloud) Ollama instances
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://localhost:11434"
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "https://ollama.com"
 const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY // Cloud Ollama API key
-const OLLAMA_LLM_MODEL = process.env.OLLAMA_LLM_MODEL || "llama3.2"
-const OLLAMA_EMBED_MODEL = process.env.OLLAMA_EMBED_MODEL || "nomic-embed-text"
+const OLLAMA_LLM_MODEL = process.env.OLLAMA_LLM_MODEL || "gemma3:4b-cloud"
+const OLLAMA_EMBED_MODEL = process.env.OLLAMA_EMBED_MODEL || "nomic-embed-text:latest"
 
 // Other API keys
 const USE_LOCAL_RECEIPT_PARSE = (process.env.USE_LOCAL_RECEIPT_PARSE || "false").toLowerCase() === "true"
@@ -103,11 +103,12 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
       }
     } catch (e) {
       console.warn("Ollama embeddings failed:", e)
+      throw new Error(`Ollama embeddings failed: ${e}. Please check OLLAMA_BASE_URL and OLLAMA_API_KEY.`)
     }
   }
 
-  // 2) Try Gemini (cloud, supports batch, fast)
-  if ((EMB_PROVIDER === "gemini" || EMB_PROVIDER === "google" || EMB_PROVIDER === "ollama") && GEM_KEY && genAI) {
+  // 2) Try Gemini (only if explicitly configured as provider)
+  if ((EMB_PROVIDER === "gemini" || EMB_PROVIDER === "google") && GEM_KEY && genAI) {
     try {
       console.log(`Using Gemini for embeddings (${texts.length} texts)...`)
       const model = genAI.getGenerativeModel({ model: "text-embedding-004" })
@@ -207,12 +208,13 @@ export async function generateText(prompt: string): Promise<string> {
       const text = data.response ?? data.message?.content ?? ""
       if (text) return text.trim()
     } catch (e) {
-      console.warn("Ollama Cloud generation failed, falling back:", e)
+      console.error("Ollama Cloud generation failed:", e)
+      throw new Error(`Ollama Cloud generation failed: ${e}. Please check OLLAMA_BASE_URL, OLLAMA_API_KEY, and OLLAMA_LLM_MODEL.`)
     }
   }
 
-  // 2) Try Gemini as fallback
-  if (GEM_KEY && genAI) {
+  // 2) Try Gemini (only if explicitly configured as provider)
+  if ((LLM_PROVIDER === "gemini" || LLM_PROVIDER === "google") && GEM_KEY && genAI) {
     try {
       console.log("Using Gemini for generation...")
       const model = genAI.getGenerativeModel({

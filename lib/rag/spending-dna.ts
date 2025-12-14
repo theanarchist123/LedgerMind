@@ -84,15 +84,17 @@ export async function analyzeSpendingDNA(userId: string): Promise<SpendingDNA> {
 }
 
 function calculateDNAStrands(receipts: ReceiptDoc[]): DNAStrand[] {
-  const totalSpent = receipts.reduce((sum, r) => sum + (r.total || 0), 0)
+  // Use INR-normalized amounts for consistent analysis
+  const amounts = receipts.map(r => r.totalINR ?? r.total ?? 0)
+  const totalSpent = amounts.reduce((sum, a) => sum + a, 0)
   const avgPerReceipt = receipts.length > 0 ? totalSpent / receipts.length : 0
 
   // Trait 1: Planning vs Spontaneity
-  const smallFrequent = receipts.filter(r => (r.total || 0) < avgPerReceipt * 0.5).length
+  const smallFrequent = receipts.filter((r, i) => amounts[i] < avgPerReceipt * 0.5).length
   const planningScore = Math.min((smallFrequent / receipts.length) * 100, 100)
 
   // Trait 2: Frugality
-  const budgetPurchases = receipts.filter(r => (r.total || 0) < 30).length
+  const budgetPurchases = receipts.filter((r, i) => amounts[i] < 2500).length // ~$30 in INR
   const frugalityScore = Math.min((budgetPurchases / receipts.length) * 120, 100)
 
   // Trait 3: Experience Seeking

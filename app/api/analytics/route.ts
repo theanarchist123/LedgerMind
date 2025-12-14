@@ -26,8 +26,8 @@ export async function GET(request: Request) {
       .sort({ createdAt: -1 })
       .toArray()
 
-    // Calculate total spent
-    const totalSpent = receipts.reduce((sum, r) => sum + (r.total || 0), 0)
+    // Calculate total spent (in INR)
+    const totalSpent = receipts.reduce((sum, r) => sum + (r.totalINR || r.total || 0), 0)
 
     // Calculate receipts by status
     const statusCounts = receipts.reduce((acc: any, r) => {
@@ -52,14 +52,14 @@ export async function GET(request: Request) {
         )
       : 0
 
-    // Category breakdown
+    // Category breakdown (using INR normalized amounts)
     const categoryMap = receipts.reduce((acc: any, r) => {
       const category = r.category || "Uncategorized"
       if (!acc[category]) {
         acc[category] = { count: 0, total: 0 }
       }
       acc[category].count++
-      acc[category].total += r.total || 0
+      acc[category].total += r.totalINR || r.total || 0
       return acc
     }, {})
 
@@ -96,7 +96,7 @@ export async function GET(request: Request) {
 
       monthlySpending.push({
         month: monthStr,
-        amount: monthReceipts.reduce((sum, r) => sum + (r.total || 0), 0),
+        amount: monthReceipts.reduce((sum, r) => sum + (r.totalINR || r.total || 0), 0),
         count: monthReceipts.length,
       })
     }

@@ -5,6 +5,8 @@ import { parseReceiptWithAI, embedTexts } from "./ai"
 import { simpleChunker, cosineSimilarity } from "./chunking"
 import { autoCategorizeReceipt } from "./auto-categorizer"
 import { runReceiptQA, checkDuplicateReceipt } from "./receipt-qa"
+import { detectCurrency } from "@/lib/currency/detect"
+import { convertToINR } from "@/lib/currency/convert"
 import type { ReceiptDoc, Chunk, RerankedChunk } from "./types"
 
 /**
@@ -79,7 +81,31 @@ export async function processReceipt({
     
     console.log(`[${receiptId}] Category: ${categorization.category} (${categorization.method}, ${(categorization.confidence * 100).toFixed(0)}% confidence)`)
 
-    // Step 2.6: Run QA checks
+    // Step 2.5.5: Detect and convert currency
+    console.log(`[${receiptId}] Detecting currency...`)
+    const currencyDetection = await detectCurrency({
+      merchant: parsed.merchant,
+      ocrText: ocrText,
+      ipCountry: null, // Can be enhanced with request IP if available
+    })
+    
+    console.log(`[${receiptId}] Detected currency: ${currencyDetection.currency} (${(currencyDetection.confidence * 100).toFixed(0)}% confidence, signals: ${currencyDetection.signals.join(', ')})`)
+    
+    // Convert to INR if not already in INR
+    let totalINR = parsed.total || 0
+    let fxRate = 1
+    let fxRateToINR = 1
+    
+    if (currencyDetection.currency !== 'INR') {
+      console.log(`[${receiptId}] Converting ${currencyDetection.currency} ${parsed.total} to INR...`)
+      const conversion = await convertToINR(parsed.total || 0, currencyDetection.currency)
+      totalINR = conversion.inr
+      fxRate = conversion.rate
+      fxRateToINR = conversion.rate
+      console.log(`[${receiptId}] Conversion complete: ${currencyDetection.currency} ${parsed.total} = INR ${totalINR} (rate: ${fxRate})`)
+    } else {
+      totalINR = parsed.total || 0
+    }
     console.log(`[${receiptId}] Running QA checks...`)
     const qaResult = await runReceiptQA({
       merchant: parsed.merchant,
@@ -130,7 +156,13 @@ export async function processReceipt({
           date: parsed.date,
           total: parsed.total,
           tax: parsed.tax,
-          currency: parsed.currency || "USD",
+          // Currency detection and conversion
+          currency: currencyDetection.currency,
+          currencyConfidence: currencyDetection.confidence,
+          currencySignals: currencyDetection.signals,
+          totalINR: totalINR,
+          fxRateToINR: fxRateToINR,
+          // Rest of fields
           category: categorization.category,
           categoryConfidence: categorization.confidence,
           categoryMethod: categorization.method,

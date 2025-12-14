@@ -244,7 +244,7 @@ export default function NeuralInsightsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-500 truncate">
-              ${(pred.predictedAmount || 0).toFixed(2)}
+              ₹{(pred.predictedAmount || 0).toFixed(2)}
             </div>
             <p className="text-sm text-muted-foreground mt-1 truncate">
               {pred.predictedCategory || 'Other'}
@@ -280,7 +280,7 @@ export default function NeuralInsightsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-purple-500 truncate">
-              ${(pred.nextWeekEstimate || 0).toFixed(2)}
+              ₹{(pred.nextWeekEstimate || 0).toFixed(2)}
             </div>
             <div className="flex items-center gap-1 mt-1">
               {getTrendIcon(pred.trend || 'stable')}
@@ -300,7 +300,7 @@ export default function NeuralInsightsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-emerald-500 truncate">
-              ${(pred.savingsOpportunity || 0).toFixed(2)}
+              ₹{(pred.savingsOpportunity || 0).toFixed(2)}
             </div>
             <p className="text-sm text-muted-foreground mt-1">
               Potential monthly savings

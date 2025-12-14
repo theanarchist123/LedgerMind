@@ -317,7 +317,7 @@ export default function DashboardPage() {
             icon={DollarSign}
             label="Total Spent"
             value={analytics.totalSpent}
-            prefix="$"
+            prefix="₹"
             description={`${analytics.receiptsProcessed} receipts`}
             trendIcon={ArrowUpRight}
             colorClass="text-green-400"
@@ -423,11 +423,11 @@ export default function DashboardPage() {
                   <YAxis 
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(value) => `$${value}`}
+                    tickFormatter={(value) => `₹${value}`}
                   />
                   <ChartTooltip 
                     content={<ChartTooltipContent />}
-                    formatter={(value: number) => [`$${value.toFixed(2)}`, "Amount"]}
+                    formatter={(value: number) => [`₹${value.toFixed(2)}`, "Amount"]}
                   />
                   <Bar 
                     dataKey="amount" 
@@ -527,7 +527,7 @@ export default function DashboardPage() {
                   />
                   <ChartTooltip 
                     content={<ChartTooltipContent />}
-                    formatter={(value: number) => [`$${value.toFixed(2)}`, "Total Spent"]}
+                    formatter={(value: number) => [`₹${value.toFixed(2)}`, "Total Spent"]}
                   />
                   <Bar 
                     dataKey="amount" 
@@ -594,7 +594,7 @@ export default function DashboardPage() {
                     </Pie>
                     <ChartTooltip 
                       content={<ChartTooltipContent />}
-                      formatter={(value: number) => [`$${value.toFixed(2)}`, "Amount"]}
+                      formatter={(value: number) => [`₹${value.toFixed(2)}`, "Amount"]}
                     />
                   </PieChart>
                 </ChartContainer>
@@ -629,7 +629,7 @@ export default function DashboardPage() {
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-sm font-medium">{cat.category}</span>
                             <span className="text-sm text-muted-foreground">
-                              ${cat.amount.toFixed(2)}
+                              ₹{cat.amount.toFixed(2)}
                             </span>
                           </div>
                           <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -726,7 +726,7 @@ export default function DashboardPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      ${receipt.total?.toFixed(2) || "0.00"}
+                      ₹{receipt.total?.toFixed(2) || "0.00"}
                     </TableCell>
                   </TableRow>
                 ))}

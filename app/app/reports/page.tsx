@@ -455,7 +455,7 @@ export default function ReportsPage() {
               >
                 <p className="text-sm text-emerald-400 font-medium">Total Amount</p>
                 <p className="text-3xl font-bold text-emerald-400">
-                  ${safeNumber(filteredAnalytics.totalSpent)}
+                  ₹{safeNumber(filteredAnalytics.totalSpent)}
                 </p>
               </motion.div>
               <motion.div 
@@ -510,7 +510,7 @@ export default function ReportsPage() {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right font-semibold">
-                            ${total}
+                            ₹{total}
                           </TableCell>
                           <TableCell className="text-right">
                             <span className={`font-medium ${

@@ -205,7 +205,7 @@ export default function MoodAnalysisPage() {
               <div className="flex justify-between items-baseline">
                 <span className="text-2xl font-bold">{analysis?.lateNightSpending?.count || 0}</span>
                 <span className="text-sm text-muted-foreground">
-                  ${(analysis?.lateNightSpending?.total || 0).toFixed(2)}
+                  ₹{(analysis?.lateNightSpending?.total || 0).toFixed(2)}
                 </span>
               </div>
               <Progress value={analysis?.lateNightSpending?.percentage || 0} className="h-2" />
@@ -230,7 +230,7 @@ export default function MoodAnalysisPage() {
               <div className="flex justify-between items-baseline">
                 <span className="text-2xl font-bold">{analysis?.weekendSpending?.count || 0}</span>
                 <span className="text-sm text-muted-foreground">
-                  ${(analysis?.weekendSpending?.total || 0).toFixed(2)}
+                  ₹{(analysis?.weekendSpending?.total || 0).toFixed(2)}
                 </span>
               </div>
               <Progress value={analysis?.weekendSpending?.percentage || 0} className="h-2" />

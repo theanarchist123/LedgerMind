@@ -10,7 +10,11 @@ export interface ReceiptDoc {
   date?: string
   total?: number
   tax?: number
-  currency?: string
+  currency?: string // Original currency code (e.g., 'USD', 'EUR', 'INR')
+  currencyConfidence?: number // 0-1 confidence in detected currency
+  currencySignals?: string[] // Debug info on how currency was detected
+  totalINR?: number // Amount normalized to Indian Rupees
+  fxRateToINR?: number // Exchange rate used for conversion
   category?: string
   categoryConfidence?: number
   categoryMethod?: "learned" | "heuristic" | "llm"

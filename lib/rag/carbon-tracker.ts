@@ -160,12 +160,16 @@ export async function analyzeCarbonFootprint(
  * Estimate CO2 for a single receipt
  */
 async function estimateCO2(receipt: ReceiptDoc): Promise<CarbonEstimate> {
-  const total = receipt.total || 0
+  // Use INR-normalized amount for consistent CO2 calculation
+  const total = receipt.totalINR ?? receipt.total ?? 0
   const category = receipt.category || "Other"
   const merchant = (receipt.merchant || "").toLowerCase()
 
   // Get base factor from category
+  // Note: CO2 factors are per unit of currency (INR), adjust thresholds accordingly
   let co2Factor = CATEGORY_CO2_FACTORS[category] || CATEGORY_CO2_FACTORS["Other"]
+  // Scale factors for INR (~83.5 rupees per dollar)
+  co2Factor = co2Factor / 83.5
 
   // Apply merchant multiplier if applicable
   for (const [key, multiplier] of Object.entries(MERCHANT_CO2_MULTIPLIERS)) {

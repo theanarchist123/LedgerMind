@@ -39,6 +39,10 @@ interface Receipt {
   merchant: string
   date: string
   total: number
+  totalINR?: number
+  currency?: string
+  currencyConfidence?: number
+  fxRateToINR?: number
   category: string
   categoryConfidence?: number
   categoryMethod?: "learned" | "heuristic" | "llm"
@@ -228,7 +232,12 @@ export default function ReceiptsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        ${receipt.total.toFixed(2)}
+                        ₹{(receipt.totalINR || receipt.total || 0).toFixed(2)}
+                        {receipt.currency && receipt.currency !== 'INR' && (
+                          <span className="text-xs text-muted-foreground ml-1">
+                            ({receipt.currency} {receipt.total.toFixed(2)})
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>

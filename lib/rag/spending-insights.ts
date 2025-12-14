@@ -57,22 +57,22 @@ export async function generateSpendingInsights(
 
   console.log(`[Insights] Analyzing ${receipts.length} receipts for period: ${period}`)
 
-  // Calculate basic stats
-  const totalSpent = receipts.reduce((sum, r) => sum + (r.total || 0), 0)
+  // Calculate basic stats using INR-normalized amounts
+  const totalSpent = receipts.reduce((sum, r) => sum + (r.totalINR ?? r.total ?? 0), 0)
   const receiptCount = receipts.length
   const needsReviewCount = receipts.filter(r => r.status === "needs_review").length
 
-  // Category breakdown
+  // Category breakdown using INR-normalized amounts
   const categoryBreakdown: Record<string, number> = {}
   for (const receipt of receipts) {
     const cat = receipt.category || "Other"
-    categoryBreakdown[cat] = (categoryBreakdown[cat] || 0) + (receipt.total || 0)
+    categoryBreakdown[cat] = (categoryBreakdown[cat] || 0) + (receipt.totalINR ?? receipt.total ?? 0)
   }
 
   const topCategory =
     Object.entries(categoryBreakdown).sort((a, b) => b[1] - a[1])[0]?.[0] || "Other"
 
-  // Calculate trend (compare with previous period)
+  // Calculate trend (compare with previous period) using INR amounts
   const prevPeriodStart = new Date(startDate)
   const prevPeriodEnd = new Date(startDate)
   prevPeriodEnd.setDate(prevPeriodEnd.getDate() - 1)
@@ -91,7 +91,7 @@ export async function generateSpendingInsights(
     })
     .toArray()
 
-  const prevTotal = prevReceipts.reduce((sum, r) => sum + (r.total || 0), 0)
+  const prevTotal = prevReceipts.reduce((sum, r) => sum + (r.totalINR ?? r.total ?? 0), 0)
   const changePercent = prevTotal > 0 ? ((totalSpent - prevTotal) / prevTotal) * 100 : 0
 
   let monthlyTrend: "increasing" | "decreasing" | "stable" = "stable"
