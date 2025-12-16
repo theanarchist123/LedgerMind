@@ -69,6 +69,15 @@ export async function processReceipt({
       source: parsed.source
     }, null, 2))
 
+    // Step 2.4: Detect currency from OCR and merchant hints
+    console.log(`[${receiptId}] Detecting currency...`)
+    const currencyDetection = await detectCurrency({
+      merchant: parsed.merchant,
+      ocrText,
+      ipCountry: null,
+    })
+    console.log(`[${receiptId}] Detected currency: ${currencyDetection.currency} (${Math.round(currencyDetection.confidence * 100)}%); signals: ${currencyDetection.signals.join(', ')}`)
+
     // Step 2.5: Auto-categorize with AI
     console.log(`[${receiptId}] Auto-categorizing...`)
     const categorization = await autoCategorizeReceipt({
@@ -78,32 +87,18 @@ export async function processReceipt({
       total: parsed.total,
       ocrText,
     })
-    
-    console.log(`[${receiptId}] Category: ${categorization.category} (${categorization.method}, ${(categorization.confidence * 100).toFixed(0)}% confidence)`)
-
-    // Step 2.5.5: Detect and convert currency
-    console.log(`[${receiptId}] Detecting currency...`)
-    const currencyDetection = await detectCurrency({
-      merchant: parsed.merchant,
-      ocrText: ocrText,
-      ipCountry: null, // Can be enhanced with request IP if available
-    })
-    
-    console.log(`[${receiptId}] Detected currency: ${currencyDetection.currency} (${(currencyDetection.confidence * 100).toFixed(0)}% confidence, signals: ${currencyDetection.signals.join(', ')})`)
-    
-    // Convert to INR if not already in INR
-    let totalINR = parsed.total || 0
-    let fxRate = 1
+    // Convert amount to INR only if not already INR
     let fxRateToINR = 1
-    
-    if (currencyDetection.currency !== 'INR') {
+    let totalINR = parsed.total || 0
+    if (currencyDetection.currency && currencyDetection.currency.toUpperCase() !== 'INR') {
       console.log(`[${receiptId}] Converting ${currencyDetection.currency} ${parsed.total} to INR...`)
       const conversion = await convertToINR(parsed.total || 0, currencyDetection.currency)
-      totalINR = conversion.inr
-      fxRate = conversion.rate
-      fxRateToINR = conversion.rate
-      console.log(`[${receiptId}] Conversion complete: ${currencyDetection.currency} ${parsed.total} = INR ${totalINR} (rate: ${fxRate})`)
+      totalINR = conversion.inr ?? totalINR
+      fxRateToINR = conversion.rate ?? 1
+      console.log(`[${receiptId}] Conversion complete: ${currencyDetection.currency} ${parsed.total} = INR ${totalINR} (rate: ${fxRateToINR})`)
     } else {
+      // Already INR, keep rate as 1 and total as-is
+      fxRateToINR = 1
       totalINR = parsed.total || 0
     }
     console.log(`[${receiptId}] Running QA checks...`)

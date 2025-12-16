@@ -2,6 +2,7 @@ export const runtime = "nodejs"
 
 import { NextRequest, NextResponse } from "next/server"
 import { getDb } from "@/lib/rag/db"
+import { convertToINR } from "@/lib/currency/convert"
 import { auth } from "@/lib/better-auth"
 import { headers } from "next/headers"
 
@@ -51,7 +52,26 @@ export async function PATCH(
 
     if (merchant !== undefined) updateFields.merchant = merchant
     if (date !== undefined) updateFields.date = date
-    if (total !== undefined) updateFields.total = parseFloat(total)
+    if (total !== undefined) {
+      const newTotal = parseFloat(total)
+      updateFields.total = newTotal
+      // Recalculate INR total when original total changes
+      try {
+        const currency = receipt.currency || "INR"
+        if (currency && currency !== "INR") {
+          const conv = await convertToINR(newTotal, currency)
+          updateFields.totalINR = conv.amountINR
+          updateFields.fxRateToINR = conv.rate
+        } else {
+          updateFields.totalINR = newTotal
+          updateFields.fxRateToINR = 1
+        }
+      } catch (e) {
+        console.warn("[update-receipt] FX conversion failed, falling back:", e)
+        updateFields.totalINR = newTotal
+        updateFields.fxRateToINR = 1
+      }
+    }
     if (category !== undefined) updateFields.category = category
     if (lineItems !== undefined) updateFields.lineItems = lineItems
 

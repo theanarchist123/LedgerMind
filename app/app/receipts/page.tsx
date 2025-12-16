@@ -70,6 +70,27 @@ export default function ReceiptsPage() {
   const [loading, setLoading] = useState(true)
   const itemsPerPage = 10
 
+  async function handleDelete(receiptId: string) {
+    try {
+      const userId = session?.user?.id || "demo-user"
+      const res = await fetch(`/api/receipts/${receiptId}/delete?userId=${userId}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.error || "Delete failed")
+      }
+      // Optimistically remove from local state
+      setReceipts(prev => prev.filter(r => r.receiptId !== receiptId && r._id !== receiptId))
+      // Optional: surface success to the user
+      // Consider integrating a toast library later
+      console.log("Receipt deleted")
+    } catch (err: any) {
+      console.error("Delete error", err)
+      console.error(err?.message || "Could not delete receipt")
+    }
+  }
+
   // Fetch receipts from MongoDB
   useEffect(() => {
     async function fetchReceipts() {
@@ -260,7 +281,10 @@ export default function ReceiptsPage() {
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem
+                              className="text-destructive cursor-pointer"
+                              onClick={() => handleDelete(receipt.receiptId || receipt._id)}
+                            >
                               <Trash className="mr-2 h-4 w-4" />
                               Delete
                             </DropdownMenuItem>

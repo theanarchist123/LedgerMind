@@ -263,9 +263,14 @@ export default function NeuralInsightsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-blue-500 truncate">
-              {((pred.confidence || 0) * 100).toFixed(0)}%
+              {Number(pred.confidence) > 1
+                ? Number(pred.confidence).toFixed(0)
+                : ((Number(pred.confidence) || 0) * 100).toFixed(0)}%
             </div>
-            <Progress value={(pred.confidence || 0) * 100} className="mt-2 h-2" />
+            <Progress
+              value={Number(pred.confidence) > 1 ? Number(pred.confidence) : (Number(pred.confidence) || 0) * 100}
+              className="mt-2 h-2"
+            />
           </CardContent>
         </Card>
 

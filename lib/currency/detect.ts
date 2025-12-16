@@ -142,7 +142,9 @@ export async function detectCurrency(
   const symbolCurrency = detectCurrencySymbol(text)
   if (symbolCurrency) {
     signals.push(`symbol:${symbolCurrency}`)
-    return { currency: symbolCurrency, confidence: 0.95, signals }
+    // If symbol is INR, treat as definitive to prevent accidental USD override
+    const conf = symbolCurrency === 'INR' ? 0.99 : 0.95
+    return { currency: symbolCurrency, confidence: conf, signals }
   }
 
   // 2) Strong OCR text hints
@@ -151,7 +153,8 @@ export async function detectCurrency(
       signals.push('ocr:india-patterns')
       return { currency: 'INR', confidence: 0.9, signals }
     }
-    if (hasHint(text, USD_HINTS)) {
+    // Prefer INR whenever strong hints exist; only consider USD if no INR hints
+    if (!hasHint(text, INDIA_HINTS) && hasHint(text, USD_HINTS)) {
       signals.push('ocr:usd-patterns')
       return { currency: 'USD', confidence: 0.85, signals }
     }
@@ -190,7 +193,9 @@ export async function detectCurrency(
   if (merchantCountry && COUNTRY_CURRENCY_MAP[merchantCountry]) {
     const currency = COUNTRY_CURRENCY_MAP[merchantCountry]
     signals.push(`geo:${merchantCountry}->${currency}`)
-    return { currency, confidence: 0.7, signals }
+    // Boost INR slightly to avoid USD override when in India
+    const conf = currency === 'INR' ? 0.8 : 0.7
+    return { currency, confidence: conf, signals }
   }
 
   // 5) IP country hint (lower confidence, user might be traveling)

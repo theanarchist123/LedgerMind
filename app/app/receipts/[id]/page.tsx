@@ -259,27 +259,26 @@ export default function ReceiptDetailPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="total">Total Amount (INR)</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="total"
-                      type="number"
-                      step="0.01"
-                      value={(receipt.totalINR || receipt.total || 0).toFixed(2)}
-                      disabled
-                      className="font-medium"
-                    />
-                    {receipt.currency && receipt.currency !== 'INR' && (
-                      <Badge variant="outline" className="whitespace-nowrap">
-                        {receipt.currency}: {receipt.total.toFixed(2)}
-                      </Badge>
+                  <Label htmlFor="total">Original Total ({receipt.currency || 'INR'})</Label>
+                  <Input
+                    id="total"
+                    type="number"
+                    step="0.01"
+                    value={receipt.total}
+                    onChange={(e) =>
+                      setReceipt({ ...receipt, total: parseFloat(e.target.value) || 0 })
+                    }
+                  />
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="outline" className="whitespace-nowrap">
+                      INR: ₹{(receipt.totalINR || receipt.total || 0).toFixed(2)}
+                    </Badge>
+                    {receipt.fxRateToINR && receipt.currency && receipt.currency !== 'INR' && (
+                      <span className="text-xs text-muted-foreground">
+                        1 {receipt.currency} = ₹{receipt.fxRateToINR.toFixed(2)}
+                      </span>
                     )}
                   </div>
-                  {receipt.fxRateToINR && receipt.fxRateToINR !== 1 && (
-                    <p className="text-xs text-muted-foreground">
-                      Exchange rate: 1 {receipt.currency} = ₹{receipt.fxRateToINR.toFixed(2)}
-                    </p>
-                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
