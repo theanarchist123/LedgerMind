@@ -40,6 +40,9 @@ export interface ReceiptDoc {
   qaFlags?: string[]
   isDuplicate?: boolean
   duplicateOf?: string[]
+  source?: "receipt" | "sms" | "manual" // Transaction source
+  transactionId?: string // UPI/Banking transaction ID
+  rawSMS?: string // Original SMS text for SMS transactions
   createdAt: Date
   updatedAt: Date
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { Capacitor } from "@capacitor/core"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -33,14 +34,17 @@ export default function SignupPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  // CRITICAL: If user already has a session, redirect to dashboard
+  // Check if running in Capacitor mobile app
+  const isMobileApp = Capacitor.isNativePlatform()
+
+  // CRITICAL: If user already has a session, redirect appropriately
   useEffect(() => {
     if (!isPending && session) {
-      console.log("Session detected on signup, redirecting to dashboard")
-      // Use window.location for more reliable redirect
-      window.location.href = "/app/dashboard"
+      const redirectUrl = isMobileApp ? "/auth/permissions" : "/app/dashboard"
+      console.log("Session detected on signup, redirecting to:", redirectUrl)
+      window.location.href = redirectUrl
     }
-  }, [session, isPending])
+  }, [session, isPending, isMobileApp])
 
   // Show loading while checking session
   if (isPending) {
@@ -99,8 +103,9 @@ export default function SignupPage() {
         setError(result.error.message || "Failed to create account")
         setIsLoading(false)
       } else {
-        // Manually redirect after successful sign up
-        router.replace("/app/dashboard")
+        // Redirect to permissions for mobile, dashboard for web
+        const redirectUrl = isMobileApp ? "/auth/permissions" : "/app/dashboard"
+        router.replace(redirectUrl)
       }
     } catch (err) {
       setError("An error occurred. Please try again.")

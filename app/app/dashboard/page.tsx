@@ -7,6 +7,7 @@ import { DollarSign, Receipt, TrendingUp, Layers, ArrowRight, ArrowUpRight, Arro
 import { motion, useMotionValue, useSpring, AnimatePresence } from "framer-motion"
 import { AIInsightsCard } from "@/components/ai-insights-card"
 import { ChatWidget } from "@/components/chat-widget"
+import { SMSPermissionBanner } from "@/components/sms-permission-banner"
 import {
   Card,
   CardContent,
@@ -297,6 +298,9 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 scroll-smooth">
+      {/* SMS Permission Banner - Mobile Only */}
+      <SMSPermissionBanner />
+      
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>

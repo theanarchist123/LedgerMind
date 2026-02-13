@@ -4,6 +4,7 @@ import { Bell, Moon, Sun } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { MobileSidebar } from "@/components/mobile-sidebar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,6 +53,9 @@ export function Navbar() {
   return (
     <div className="border-b">
       <div className="flex h-16 items-center px-4 gap-4">
+        {/* Mobile menu button */}
+        <MobileSidebar />
+
         <div className="ml-auto flex items-center space-x-4">
           {/* Theme toggle */}
           <div className="flex items-center space-x-2">

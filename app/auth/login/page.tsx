@@ -4,6 +4,8 @@ import { useState, useEffect, Suspense } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
+import { Capacitor } from "@capacitor/core"
+import { SMSManager } from "@/lib/sms/sms-manager"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -34,21 +36,46 @@ function LoginForm() {
   // Get callback URL from query params
   const callbackUrl = searchParams?.get("callbackUrl") || "/app/dashboard"
 
+  // Check if running in Capacitor mobile app
+  const isMobileApp = Capacitor.isNativePlatform()
+
   // Track if we've already tried to redirect (prevent infinite loop)
   const [hasTriedRedirect, setHasTriedRedirect] = useState(false)
 
-  // CRITICAL: If user already has a session, redirect immediately
+  // CRITICAL: If user already has a session, check SMS permissions and redirect
   useEffect(() => {
-    if (!isPending && session && !hasTriedRedirect) {
-      console.log("Session detected, redirecting to:", callbackUrl)
-      setHasTriedRedirect(true)
-      
-      // Small delay to ensure cookies are set
-      setTimeout(() => {
-        window.location.href = callbackUrl
-      }, 500)
+    const handleSessionRedirect = async () => {
+      if (!isPending && session && !hasTriedRedirect) {
+        setHasTriedRedirect(true)
+        
+        // For mobile users, check if SMS permission is granted
+        if (isMobileApp) {
+          try {
+            const permissionStatus = await SMSManager.checkPermission()
+            
+            // If no SMS permission, redirect to permissions page
+            if (!permissionStatus.granted) {
+              console.log("Mobile user without SMS permissions, redirecting to permissions page")
+              setTimeout(() => {
+                window.location.href = "/auth/permissions"
+              }, 500)
+              return
+            }
+          } catch (err) {
+            console.error("Failed to check SMS permission:", err)
+          }
+        }
+        
+        // Otherwise, redirect to callback URL or dashboard
+        console.log("Session detected, redirecting to:", callbackUrl)
+        setTimeout(() => {
+          window.location.href = callbackUrl
+        }, 500)
+      }
     }
-  }, [session, isPending, callbackUrl, hasTriedRedirect])
+    
+    handleSessionRedirect()
+  }, [session, isPending, callbackUrl, hasTriedRedirect, isMobileApp])
 
   // Check for OAuth error in URL
   useEffect(() => {
@@ -104,8 +131,25 @@ function LoginForm() {
         setError(result.error.message || "Invalid email or password")
         setIsLoading(false)
       } else {
-        // Manually redirect after successful sign in
-        router.replace(callbackUrl)
+        // Check SMS permissions for mobile users
+        if (isMobileApp) {
+          try {
+            const permissionStatus = await SMSManager.checkPermission()
+            if (!permissionStatus.granted) {
+              // Redirect to permissions page
+              window.location.href = "/auth/permissions"
+              return
+            }
+          } catch (err) {
+            console.error("Failed to check SMS permission:", err)
+          }
+        }
+        
+        // Redirect to callback URL or dashboard
+        const redirectUrl = callbackUrl
+          ? "/auth/permissions"
+          : callbackUrl
+        router.replace(redirectUrl)
       }
     } catch (err) {
       console.error('Email sign in exception:', err)

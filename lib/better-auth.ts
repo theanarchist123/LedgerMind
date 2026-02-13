@@ -9,7 +9,9 @@ export const auth = betterAuth({
   trustedOrigins: [
     "http://localhost:3000",
     "http://localhost:3001",
-    "https://ledger-mind-30.vercel.app"
+    "https://ledger-mind-30.vercel.app",
+    "ledgermind://auth", // Deep link for mobile OAuth
+    "capacitor://localhost"
   ],
   emailAndPassword: {
     enabled: true,
@@ -26,11 +28,13 @@ export const auth = betterAuth({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
       enabled: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+      redirectURI: process.env.GOOGLE_REDIRECT_URI, // Can be set for mobile deep link
     },
     github: {
       clientId: process.env.GITHUB_CLIENT_ID || "",
       clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
       enabled: !!(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET),
+      redirectURI: process.env.GITHUB_REDIRECT_URI, // Can be set for mobile deep link
     },
   },
   callbacks: {

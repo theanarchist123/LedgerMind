@@ -13,7 +13,8 @@ import {
   AlertOctagon,
   Dna,
   Sparkles,
-  Settings
+  Settings,
+  Wallet
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -23,6 +24,12 @@ const routes = [
     icon: LayoutDashboard,
     href: "/app/dashboard",
     color: "text-sky-500",
+  },
+  {
+    label: "Expense Tracker",
+    icon: Wallet,
+    href: "/app/expense-tracker",
+    color: "text-emerald-500",
   },
   {
     label: "Receipts",

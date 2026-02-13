@@ -34,9 +34,17 @@
     "type-check": "tsc --noEmit",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "migrate:currencies": "tsx scripts/migrate-currencies.ts",
-    "migrate:status": "tsx scripts/check-migration-status.ts"
+    "migrate:status": "tsx scripts/check-migration-status.ts",
+    "export": "next build && npx cap sync",
+    "mobile:build": "node scripts/build-mobile.bat",
+    "android": "npx cap open android",
+    "ios": "npx cap open ios",
+    "sync": "npx cap sync"
   },
   "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
     "@google/generative-ai": "^0.24.1",
     "@mlc-ai/web-llm": "^0.2.45",
     "@radix-ui/react-alert-dialog": "^1.1.2",
@@ -77,6 +85,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@capacitor/cli": "^6.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

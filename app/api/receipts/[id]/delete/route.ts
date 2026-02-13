@@ -21,10 +21,10 @@ export async function DELETE(
 
     // Delete receipt document
     // Stored receipts use string `_id` equal to `receiptId`
-    const res = await receipts.deleteOne({ _id: receiptId, userId })
+    const res = await receipts.deleteOne({ _id: receiptId, userId } as any)
 
     // Also delete associated chunks
-    await chunks.deleteMany({ receiptId, userId })
+    await chunks.deleteMany({ receiptId, userId } as any)
 
     if (res.deletedCount === 0) {
       return NextResponse.json({ error: "Receipt not found" }, { status: 404 })

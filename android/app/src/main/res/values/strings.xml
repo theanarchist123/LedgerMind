@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LedgerMind</string>
+    <string name="title_activity_main">LedgerMind</string>
+    <string name="package_name">com.ledgermind.app</string>
+    <string name="custom_url_scheme">com.ledgermind.app</string>
+</resources>

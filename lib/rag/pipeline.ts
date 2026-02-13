@@ -30,7 +30,7 @@ export async function processReceipt({
   try {
     // Mark as processing and ensure document exists with createdAt
     await receipts.updateOne(
-      { _id: receiptId, userId },
+      { _id: receiptId, userId } as any,
       {
         $set: {
           status: "processing",
@@ -143,7 +143,7 @@ export async function processReceipt({
     console.log(`[${receiptId}] Storing to MongoDB...`)
     
     await receipts.updateOne(
-      { _id: receiptId, userId },
+      { _id: receiptId, userId } as any,
       {
         $set: {
           ocrText,
@@ -201,7 +201,7 @@ export async function processReceipt({
     console.error(`[${receiptId}] Processing failed:`, error)
 
     await receipts.updateOne(
-      { _id: receiptId, userId },
+      { _id: receiptId, userId } as any,
       {
         $set: {
           status: "failed",
@@ -264,7 +264,7 @@ export async function getReceipt(receiptId: string, userId: string) {
   const db = await getDb()
   const receipts = db.collection<ReceiptDoc>("receipts")
 
-  return receipts.findOne({ _id: receiptId, userId })
+  return receipts.findOne({ _id: receiptId, userId } as any)
 }
 
 /**

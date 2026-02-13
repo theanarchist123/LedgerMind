@@ -60,7 +60,7 @@ export async function PATCH(
         const currency = receipt.currency || "INR"
         if (currency && currency !== "INR") {
           const conv = await convertToINR(newTotal, currency)
-          updateFields.totalINR = conv.amountINR
+          updateFields.totalINR = conv.inr
           updateFields.fxRateToINR = conv.rate
         } else {
           updateFields.totalINR = newTotal
@@ -77,7 +77,7 @@ export async function PATCH(
 
     // Update the receipt using the found receipt's _id
     await receipts.updateOne(
-      { _id: receipt._id },
+      { _id: receipt._id } as any,
       { $set: updateFields }
     )
 

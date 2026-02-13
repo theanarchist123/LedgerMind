@@ -135,7 +135,7 @@ export async function learnFromCorrection({
   const trainingId = `${userId}_${merchantNorm}`
 
   // Update or create training entry
-  const existing = await trainingCol.findOne({ _id: trainingId })
+  const existing = await trainingCol.findOne({ _id: trainingId } as any)
 
   if (existing) {
     // If user changed to same category, increase confidence
@@ -143,7 +143,7 @@ export async function learnFromCorrection({
     const isSameCategory = existing.category === newCategory
     
     await trainingCol.updateOne(
-      { _id: trainingId },
+      { _id: trainingId } as any,
       {
         $set: {
           category: newCategory,
@@ -173,7 +173,7 @@ export async function learnFromCorrection({
       occurrences: 1,
       lastUsed: new Date(),
       createdAt: new Date(),
-    })
+    } as any)
     
     console.log(`[Learn] Created new pattern for ${merchant} → ${newCategory}`)
   }

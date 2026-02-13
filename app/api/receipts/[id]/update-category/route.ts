@@ -36,7 +36,7 @@ export async function PATCH(
     const receipts = db.collection("receipts")
     
     console.log(`[update-category] Looking for receipt: ${id}, userId: ${userId}`)
-    const receipt = await receipts.findOne({ _id: id as any, userId })
+    const receipt = await receipts.findOne({ _id: id, userId } as any)
     
     if (!receipt) {
       console.log(`[update-category] Receipt not found: ${id}`)
@@ -50,7 +50,7 @@ export async function PATCH(
 
     // Update the receipt category in database
     await receipts.updateOne(
-      { _id: id as any, userId },
+      { _id: id, userId } as any,
       {
         $set: {
           category,
