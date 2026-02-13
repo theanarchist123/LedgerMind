@@ -297,14 +297,14 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6 scroll-smooth">
+    <div className="space-y-4 sm:space-y-6 scroll-smooth max-w-full overflow-x-hidden">
       {/* SMS Permission Banner - Mobile Only */}
       <SMSPermissionBanner />
       
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
+      <div className="px-1">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight break-words">Dashboard</h1>
+        <p className="text-sm sm:text-base text-muted-foreground break-words">
           Overview of your receipt management activity
         </p>
       </div>

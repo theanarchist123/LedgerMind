@@ -159,60 +159,60 @@ export default function ExpenseTrackerPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 max-w-full overflow-x-hidden">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Expense Tracker</h1>
-        <p className="text-muted-foreground">
+      <div className="px-1">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight break-words">Expense Tracker</h1>
+        <p className="text-sm sm:text-base text-muted-foreground break-words">
           Complete transaction log from receipts and SMS
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-            <TrendingDown className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium break-words">Total Spent</CardTitle>
+            <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{stats.totalSpent.toLocaleString("en-IN")}</div>
-            <p className="text-xs text-muted-foreground">{stats.transactionCount} transactions</p>
+            <div className="text-lg sm:text-2xl font-bold break-words">₹{stats.totalSpent.toLocaleString("en-IN")}</div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">{stats.transactionCount} transactions</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">SMS Transactions</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium break-words">SMS Transactions</CardTitle>
+            <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.smsCount}</div>
-            <p className="text-xs text-muted-foreground">Auto-tracked via SMS</p>
+            <div className="text-lg sm:text-2xl font-bold">{stats.smsCount}</div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground break-words">Auto-tracked via SMS</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Receipt Uploads</CardTitle>
-            <Receipt className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium break-words">Receipt Uploads</CardTitle>
+            <Receipt className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.receiptCount}</div>
-            <p className="text-xs text-muted-foreground">Manually uploaded</p>
+            <div className="text-lg sm:text-2xl font-bold">{stats.receiptCount}</div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground break-words">Manually uploaded</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Transaction</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium break-words">Avg. Transaction</CardTitle>
+            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-lg sm:text-2xl font-bold break-words">
               ₹{stats.transactionCount > 0 ? (stats.totalSpent / stats.transactionCount).toFixed(0) : 0}
             </div>
-            <p className="text-xs text-muted-foreground">Per transaction</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground break-words">Per transaction</p>
           </CardContent>
         </Card>
       </div>
@@ -220,27 +220,27 @@ export default function ExpenseTrackerPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Transaction Log</CardTitle>
-          <CardDescription>View, filter, and export all your transactions</CardDescription>
+          <CardTitle className="text-base sm:text-lg break-words">Transaction Log</CardTitle>
+          <CardDescription className="text-xs sm:text-sm break-words">View, filter, and export all your transactions</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {/* Filter Controls */}
-            <div className="flex flex-wrap gap-4">
-              <div className="flex-1 min-w-[200px]">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4">
+              <div className="flex-1 min-w-full sm:min-w-[200px]">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search merchant, category, or ID..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
+                    className="pl-9 sm:pl-10 text-xs sm:text-sm"
                   />
                 </div>
               </div>
 
               <Select value={sourceFilter} onValueChange={setSourceFilter}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-full sm:w-40 text-xs sm:text-sm">
                   <SelectValue placeholder="Source" />
                 </SelectTrigger>
                 <SelectContent>
@@ -252,7 +252,7 @@ export default function ExpenseTrackerPage() {
               </Select>
 
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-full sm:w-40 text-xs sm:text-sm">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -266,7 +266,7 @@ export default function ExpenseTrackerPage() {
               </Select>
 
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-full sm:w-40 text-xs sm:text-sm">
                   <SelectValue placeholder="Sort By" />
                 </SelectTrigger>
                 <SelectContent>
@@ -277,8 +277,8 @@ export default function ExpenseTrackerPage() {
                 </SelectContent>
               </Select>
 
-              <Button onClick={exportToCSV} variant="outline" className="gap-2">
-                <Download className="h-4 w-4" />
+              <Button onClick={exportToCSV} variant="outline" className="gap-2 w-full sm:w-auto text-xs sm:text-sm">
+                <Download className="h-3 w-3 sm:h-4 sm:w-4" />
                 Export CSV
               </Button>
             </div>
@@ -297,54 +297,55 @@ export default function ExpenseTrackerPage() {
                 <p className="text-sm">Try adjusting your filters or upload your first receipt</p>
               </div>
             ) : (
-              <div className="rounded-md border">
+              <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Merchant</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Source</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Date</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Merchant</TableHead>
+                      <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Category</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Amount</TableHead>
+                      <TableHead className="text-xs sm:text-sm hidden md:table-cell">Source</TableHead>
+                      <TableHead className="text-xs sm:text-sm hidden md:table-cell">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredTransactions.map((txn) => (
                       <TableRow key={txn._id}>
-                        <TableCell className="font-mono text-sm">
+                        <TableCell className="font-mono text-[10px] sm:text-sm whitespace-nowrap">
                           {txn.date || new Date(txn.createdAt).toLocaleDateString()}
                         </TableCell>
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium text-xs sm:text-sm break-words max-w-[120px] sm:max-w-none">
                           {txn.merchant || "Unknown"}
                         </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{txn.category || "Other"}</Badge>
+                        <TableCell className="hidden sm:table-cell">
+                          <Badge variant="outline" className="text-[10px] sm:text-xs">{txn.category || "Other"}</Badge>
                         </TableCell>
-                        <TableCell className="font-semibold">
+                        <TableCell className="font-semibold text-xs sm:text-sm whitespace-nowrap">
                           ₹{(txn.totalINR || txn.total || 0).toLocaleString("en-IN")}
                           {txn.currency !== "INR" && (
-                            <span className="text-xs text-muted-foreground ml-1">
+                            <span className="text-[10px] sm:text-xs text-muted-foreground ml-1">
                               ({txn.currency})
                             </span>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           {txn.source === "sms" ? (
-                            <Badge variant="default" className="gap-1">
+                            <Badge variant="default" className="gap-1 text-[10px] sm:text-xs">
                               <MessageSquare className="h-3 w-3" />
                               SMS
                             </Badge>
                           ) : (
-                            <Badge variant="secondary" className="gap-1">
+                            <Badge variant="secondary" className="gap-1 text-[10px] sm:text-xs">
                               <Receipt className="h-3 w-3" />
                               Receipt
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <Badge
                             variant={txn.status === "completed" ? "default" : "secondary"}
+                            className="text-[10px] sm:text-xs"
                           >
                             {txn.status}
                           </Badge>

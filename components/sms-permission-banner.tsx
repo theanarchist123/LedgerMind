@@ -59,25 +59,25 @@ export function SMSPermissionBanner() {
   }
 
   return (
-    <Alert className="mb-6 border-orange-500/50 bg-orange-500/10">
-      <Smartphone className="h-5 w-5 text-orange-600" />
-      <AlertTitle className="flex items-center justify-between">
-        <span>Connect Google Messages</span>
+    <Alert className="mb-4 sm:mb-6 border-orange-500/50 bg-orange-500/10">
+      <Smartphone className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 flex-shrink-0" />
+      <AlertTitle className="flex items-center justify-between text-sm sm:text-base">
+        <span className="break-words pr-2">Connect Google Messages</span>
         <Button
           variant="ghost"
           size="icon"
-          className="h-5 w-5 -mr-2"
+          className="h-5 w-5 -mr-2 flex-shrink-0"
           onClick={handleDismiss}
         >
-          <X className="h-4 w-4" />
+          <X className="h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
       </AlertTitle>
       <AlertDescription className="mt-2">
-        <p className="text-sm mb-3">
+        <p className="text-xs sm:text-sm mb-3 break-words">
           Enable automatic transaction tracking by connecting to your SMS messages. 
           We'll only read transaction alerts from banks and payment apps.
         </p>
-        <Button onClick={handleGrantPermissions} size="sm" className="w-full sm:w-auto">
+        <Button onClick={handleGrantPermissions} size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
           Connect Now
         </Button>
       </AlertDescription>
