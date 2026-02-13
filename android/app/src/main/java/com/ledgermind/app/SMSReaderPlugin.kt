@@ -26,6 +26,7 @@ import org.json.JSONObject
 class SMSReaderPlugin : Plugin() {
 
     companion object {
+        private const val TAG = "SMSReaderPlugin"
         private const val PERMISSION_DENIED = "SMS_PERMISSION_DENIED"
         private const val READ_ERROR = "SMS_READ_ERROR"
         private const val PREFS_NAME = "sms_reader_prefs"
