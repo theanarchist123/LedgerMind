@@ -7,7 +7,6 @@ import { DollarSign, Receipt, TrendingUp, Layers, ArrowRight, ArrowUpRight, Arro
 import { motion, useMotionValue, useSpring, AnimatePresence } from "framer-motion"
 import { AIInsightsCard } from "@/components/ai-insights-card"
 import { ChatWidget } from "@/components/chat-widget"
-import { SMSPermissionBanner } from "@/components/sms-permission-banner"
 import {
   Card,
   CardContent,
@@ -220,7 +219,7 @@ export default function DashboardPage() {
   // Generate category chart config dynamically with green shades
   const generateCategoryChartConfig = () => {
     if (!analytics) return {}
-    
+
     const greenShades = [
       "hsl(142, 77%, 73%)", // Green 300 - Light
       "hsl(142, 69%, 58%)", // Green 400
@@ -233,7 +232,7 @@ export default function DashboardPage() {
       "hsl(152, 69%, 31%)", // Emerald 700
       "hsl(151, 55%, 42%)", // Emerald 600
     ]
-    
+
     const config: ChartConfig = {}
     analytics.categoryBreakdown.forEach((cat, index) => {
       config[cat.category] = {
@@ -255,7 +254,7 @@ export default function DashboardPage() {
   async function fetchDashboardData() {
     try {
       setLoading(true)
-      
+
       // Fetch analytics
       const analyticsRes = await fetch("/api/analytics")
       if (analyticsRes.ok) {
@@ -298,9 +297,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6 scroll-smooth max-w-full overflow-x-hidden">
-      {/* SMS Permission Banner - Mobile Only */}
-      <SMSPermissionBanner />
-      
       {/* Header */}
       <div className="px-1">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight break-words">Dashboard</h1>
@@ -355,8 +351,8 @@ export default function DashboardPage() {
               analytics.averageConfidence >= 85
                 ? "Excellent accuracy"
                 : analytics.averageConfidence >= 70
-                ? "Good accuracy"
-                : "Fair accuracy"
+                  ? "Good accuracy"
+                  : "Fair accuracy"
             }
             trendIcon={analytics.averageConfidence >= 85 ? ArrowUpRight : ArrowDownRight}
             colorClass="text-teal-400"
@@ -408,40 +404,40 @@ export default function DashboardPage() {
             exit="exit"
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-          <Card>
-            <CardHeader>
-              <CardTitle>Monthly Spending</CardTitle>
-              <CardDescription>
-                Your spending trends over the past 6 months
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pl-2">
-              <ChartContainer config={monthlyChartConfig} className="h-[300px] w-full">
-                <BarChart data={analytics.monthlySpending}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="month"
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis 
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => `₹${value}`}
-                  />
-                  <ChartTooltip 
-                    content={<ChartTooltipContent />}
-                    formatter={(value: number) => [`₹${value.toFixed(2)}`, "Amount"]}
-                  />
-                  <Bar 
-                    dataKey="amount" 
-                    fill="var(--color-amount)" 
-                    radius={[8, 8, 0, 0]}
-                  />
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Monthly Spending</CardTitle>
+                <CardDescription>
+                  Your spending trends over the past 6 months
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pl-2">
+                <ChartContainer config={monthlyChartConfig} className="h-[300px] w-full">
+                  <BarChart data={analytics.monthlySpending}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="month"
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => `₹${value}`}
+                    />
+                    <ChartTooltip
+                      content={<ChartTooltipContent />}
+                      formatter={(value: number) => [`₹${value.toFixed(2)}`, "Amount"]}
+                    />
+                    <Bar
+                      dataKey="amount"
+                      fill="var(--color-amount)"
+                      radius={[8, 8, 0, 0]}
+                    />
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
           </motion.div>
         </TabsContent>
 
@@ -454,94 +450,94 @@ export default function DashboardPage() {
             exit="exit"
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-          <Card>
-            <CardHeader>
-              <CardTitle>Spending Trends</CardTitle>
-              <CardDescription>
-                Track your spending patterns over time
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={trendChartConfig} className="h-[300px] w-full">
-                <LineChart data={analytics.monthlySpending}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="month"
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis 
-                    yAxisId="left"
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => `$${value}`}
-                  />
-                  <YAxis 
-                    yAxisId="right" 
-                    orientation="right"
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line
-                    yAxisId="left"
-                    type="monotone"
-                    dataKey="amount"
-                    stroke="var(--color-amount)"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="count"
-                    stroke="var(--color-count)"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Spending Trends</CardTitle>
+                <CardDescription>
+                  Track your spending patterns over time
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer config={trendChartConfig} className="h-[300px] w-full">
+                  <LineChart data={analytics.monthlySpending}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="month"
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      yAxisId="left"
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => `$${value}`}
+                    />
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line
+                      yAxisId="left"
+                      type="monotone"
+                      dataKey="amount"
+                      stroke="var(--color-amount)"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="count"
+                      stroke="var(--color-count)"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
 
-          {/* Top Merchants */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Top Merchants</CardTitle>
-              <CardDescription>
-                Your most frequent vendors
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={merchantChartConfig} className="h-[250px] w-full">
-                <BarChart data={analytics.topMerchants} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    type="number"
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => `$${value}`}
-                  />
-                  <YAxis 
-                    dataKey="merchant" 
-                    type="category" 
-                    width={100}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <ChartTooltip 
-                    content={<ChartTooltipContent />}
-                    formatter={(value: number) => [`₹${value.toFixed(2)}`, "Total Spent"]}
-                  />
-                  <Bar 
-                    dataKey="amount" 
-                    fill="var(--color-amount)"
-                    radius={[0, 8, 8, 0]}
-                  />
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+            {/* Top Merchants */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Top Merchants</CardTitle>
+                <CardDescription>
+                  Your most frequent vendors
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer config={merchantChartConfig} className="h-[250px] w-full">
+                  <BarChart data={analytics.topMerchants} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      type="number"
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => `$${value}`}
+                    />
+                    <YAxis
+                      dataKey="merchant"
+                      type="category"
+                      width={100}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <ChartTooltip
+                      content={<ChartTooltipContent />}
+                      formatter={(value: number) => [`₹${value.toFixed(2)}`, "Total Spent"]}
+                    />
+                    <Bar
+                      dataKey="amount"
+                      fill="var(--color-amount)"
+                      radius={[0, 8, 8, 0]}
+                    />
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
           </motion.div>
         </TabsContent>
 
@@ -554,108 +550,108 @@ export default function DashboardPage() {
             exit="exit"
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* Pie Chart */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Category Distribution</CardTitle>
-                <CardDescription>
-                  Spending by category
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer 
-                  config={categoryChartConfig} 
-                  className="h-[300px] w-full"
-                >
-                  <PieChart>
-                    <Pie
-                      data={analytics.categoryBreakdown}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={(entry: any) => 
-                        `${entry.category}: ${entry.percentage}%`
-                      }
-                      outerRadius={80}
-                      dataKey="amount"
-                      nameKey="category"
-                    >
-                      {analytics.categoryBreakdown.map((entry, index) => {
-                        const greenShades = [
-                          "hsl(142, 77%, 73%)", "hsl(142, 69%, 58%)", "hsl(142, 71%, 45%)",
-                          "hsl(142, 76%, 36%)", "hsl(142, 72%, 29%)", "hsl(142, 70%, 24%)",
-                          "hsl(160, 84%, 39%)", "hsl(158, 64%, 52%)", "hsl(152, 69%, 31%)",
-                          "hsl(151, 55%, 42%)",
-                        ]
-                        return (
-                          <Cell 
-                            key={`cell-${index}`} 
-                            fill={greenShades[index % greenShades.length]}
-                          />
-                        )
-                      })}
-                    </Pie>
-                    <ChartTooltip 
-                      content={<ChartTooltipContent />}
-                      formatter={(value: number) => [`₹${value.toFixed(2)}`, "Amount"]}
-                    />
-                  </PieChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-
-            {/* Category Breakdown List */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Category Breakdown</CardTitle>
-                <CardDescription>
-                  Detailed spending per category
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {analytics.categoryBreakdown.map((cat, index) => {
-                    const greenShades = [
-                      "hsl(142, 77%, 73%)", "hsl(142, 69%, 58%)", "hsl(142, 71%, 45%)",
-                      "hsl(142, 76%, 36%)", "hsl(142, 72%, 29%)", "hsl(142, 70%, 24%)",
-                      "hsl(160, 84%, 39%)", "hsl(158, 64%, 52%)", "hsl(152, 69%, 31%)",
-                      "hsl(151, 55%, 42%)",
-                    ]
-                    const color = greenShades[index % greenShades.length]
-                    return (
-                      <div key={cat.category} className="flex items-center">
-                        <div 
-                          className="w-3 h-3 rounded-full mr-3"
-                          style={{ backgroundColor: color }}
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-medium">{cat.category}</span>
-                            <span className="text-sm text-muted-foreground">
-                              ₹{cat.amount.toFixed(2)}
-                            </span>
-                          </div>
-                          <div className="h-2 rounded-full bg-muted overflow-hidden">
-                            <div
-                              className="h-full transition-all"
-                              style={{ 
-                                width: `${cat.percentage}%`,
-                                backgroundColor: color
-                              }}
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* Pie Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Category Distribution</CardTitle>
+                  <CardDescription>
+                    Spending by category
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={categoryChartConfig}
+                    className="h-[300px] w-full"
+                  >
+                    <PieChart>
+                      <Pie
+                        data={analytics.categoryBreakdown}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={(entry: any) =>
+                          `${entry.category}: ${entry.percentage}%`
+                        }
+                        outerRadius={80}
+                        dataKey="amount"
+                        nameKey="category"
+                      >
+                        {analytics.categoryBreakdown.map((entry, index) => {
+                          const greenShades = [
+                            "hsl(142, 77%, 73%)", "hsl(142, 69%, 58%)", "hsl(142, 71%, 45%)",
+                            "hsl(142, 76%, 36%)", "hsl(142, 72%, 29%)", "hsl(142, 70%, 24%)",
+                            "hsl(160, 84%, 39%)", "hsl(158, 64%, 52%)", "hsl(152, 69%, 31%)",
+                            "hsl(151, 55%, 42%)",
+                          ]
+                          return (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={greenShades[index % greenShades.length]}
                             />
+                          )
+                        })}
+                      </Pie>
+                      <ChartTooltip
+                        content={<ChartTooltipContent />}
+                        formatter={(value: number) => [`₹${value.toFixed(2)}`, "Amount"]}
+                      />
+                    </PieChart>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+
+              {/* Category Breakdown List */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Category Breakdown</CardTitle>
+                  <CardDescription>
+                    Detailed spending per category
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {analytics.categoryBreakdown.map((cat, index) => {
+                      const greenShades = [
+                        "hsl(142, 77%, 73%)", "hsl(142, 69%, 58%)", "hsl(142, 71%, 45%)",
+                        "hsl(142, 76%, 36%)", "hsl(142, 72%, 29%)", "hsl(142, 70%, 24%)",
+                        "hsl(160, 84%, 39%)", "hsl(158, 64%, 52%)", "hsl(152, 69%, 31%)",
+                        "hsl(151, 55%, 42%)",
+                      ]
+                      const color = greenShades[index % greenShades.length]
+                      return (
+                        <div key={cat.category} className="flex items-center">
+                          <div
+                            className="w-3 h-3 rounded-full mr-3"
+                            style={{ backgroundColor: color }}
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm font-medium">{cat.category}</span>
+                              <span className="text-sm text-muted-foreground">
+                                ₹{cat.amount.toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="h-2 rounded-full bg-muted overflow-hidden">
+                              <div
+                                className="h-full transition-all"
+                                style={{
+                                  width: `${cat.percentage}%`,
+                                  backgroundColor: color
+                                }}
+                              />
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {cat.count} receipt{cat.count !== 1 ? 's' : ''}
+                            </p>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {cat.count} receipt{cat.count !== 1 ? 's' : ''}
-                          </p>
                         </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                      )
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </motion.div>
         </TabsContent>
       </Tabs>
@@ -666,79 +662,79 @@ export default function DashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Recent Receipts</CardTitle>
-              <CardDescription>
-                Your latest processed receipts
-              </CardDescription>
-            </div>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/app/receipts">
-                View All
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {recentReceipts.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Receipt className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>No receipts yet</p>
-              <Button asChild variant="link" size="sm" className="mt-2">
-                <Link href="/app/upload">Upload your first receipt</Link>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Recent Receipts</CardTitle>
+                <CardDescription>
+                  Your latest processed receipts
+                </CardDescription>
+              </div>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/app/receipts">
+                  View All
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
               </Button>
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Merchant</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentReceipts.map((receipt) => (
-                  <TableRow key={receipt.id}>
-                    <TableCell className="font-medium">
-                      <Link 
-                        href={`/app/receipts/${receipt.id}`}
-                        className="hover:underline"
-                      >
-                        {receipt.merchant || "Unknown"}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{receipt.date || "N/A"}</TableCell>
-                    <TableCell>{receipt.category || "Uncategorized"}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          receipt.status === "completed"
-                            ? "default"
-                            : receipt.status === "needs_review"
-                            ? "secondary"
-                            : "outline"
-                        }
-                      >
-                        {receipt.status?.replace("_", " ") || "pending"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      ₹{receipt.total?.toFixed(2) || "0.00"}
-                    </TableCell>
+          </CardHeader>
+          <CardContent>
+            {recentReceipts.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Receipt className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No receipts yet</p>
+                <Button asChild variant="link" size="sm" className="mt-2">
+                  <Link href="/app/upload">Upload your first receipt</Link>
+                </Button>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Merchant</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {recentReceipts.map((receipt) => (
+                    <TableRow key={receipt.id}>
+                      <TableCell className="font-medium">
+                        <Link
+                          href={`/app/receipts/${receipt.id}`}
+                          className="hover:underline"
+                        >
+                          {receipt.merchant || "Unknown"}
+                        </Link>
+                      </TableCell>
+                      <TableCell>{receipt.date || "N/A"}</TableCell>
+                      <TableCell>{receipt.category || "Uncategorized"}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            receipt.status === "completed"
+                              ? "default"
+                              : receipt.status === "needs_review"
+                                ? "secondary"
+                                : "outline"
+                          }
+                        >
+                          {receipt.status?.replace("_", " ") || "pending"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        ₹{receipt.total?.toFixed(2) || "0.00"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* Floating Chat Widget */}
