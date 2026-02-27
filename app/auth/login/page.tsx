@@ -296,17 +296,9 @@ function LoginForm() {
             </p>
           </CardFooter>
         </form>
-      </form>
-    </Card>
-      
-      {/* DEBUG INFO - REMOVE AFTER FIXING */ }
-  <div className="mt-4 p-2 bg-black/80 text-white text-xs max-w-md rounded font-mono break-all">
-    <p>Debug Info:</p>
-    <p>isMobileApp: {String(isMobilePlatform())}</p>
-    <p>UA: {typeof window !== 'undefined' ? window.navigator.userAgent.substring(0, 50) + "..." : "N/A"}</p>
-  </div>
+      </Card>
 
-    </div >
+    </div>
   )
 }
 
