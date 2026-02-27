@@ -2,56 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Smooth scrolling for the entire document */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ── Base reset ── */
 html {
   scroll-behavior: smooth;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 142.1 76.2% 36.3%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 142.1 76.2% 36.3%;
-    --radius: 0.5rem;
+    /* Magazine dark theme — obsidian + emerald */
+    --background: 240 10% 4%;
+    --foreground: 0 0% 95%;
+    --card: 240 8% 6%;
+    --card-foreground: 0 0% 90%;
+    --popover: 240 8% 6%;
+    --popover-foreground: 0 0% 90%;
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 2%;
+    --secondary: 240 6% 12%;
+    --secondary-foreground: 0 0% 80%;
+    --muted: 240 6% 10%;
+    --muted-foreground: 240 4% 50%;
+    --accent: 160 84% 39%;
+    --accent-foreground: 0 0% 2%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 6% 12%;
+    --input: 240 6% 12%;
+    --ring: 160 84% 39%;
+    --radius: 0.75rem;
   }
 
+  /* Keep dark variables same — we're always dark */
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 142.1 70.6% 45.3%;
-    --primary-foreground: 144.9 80.4% 10%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --background: 240 10% 4%;
+    --foreground: 0 0% 95%;
+    --card: 240 8% 6%;
+    --card-foreground: 0 0% 90%;
+    --popover: 240 8% 6%;
+    --popover-foreground: 0 0% 90%;
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 2%;
+    --secondary: 240 6% 12%;
+    --secondary-foreground: 0 0% 80%;
+    --muted: 240 6% 10%;
+    --muted-foreground: 240 4% 50%;
+    --accent: 160 84% 39%;
+    --accent-foreground: 0 0% 2%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 142.4 71.8% 29.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 6% 12%;
+    --input: 240 6% 12%;
+    --ring: 160 84% 39%;
   }
+
   .theme {
     --animate-marquee: marquee var(--duration) infinite linear;
     --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
@@ -63,46 +69,67 @@ html {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[#060608] text-white;
     overflow-x: hidden;
     max-width: 100vw;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Mobile responsiveness utilities */
+/* ── Magazine typography ── */
 @layer utilities {
-  /* Prevent horizontal scrolling on mobile */
+  .editorial-heading {
+    font-feature-settings: "ss01", "ss02", "cv01";
+    letter-spacing: -0.03em;
+    line-height: 0.92;
+  }
+
+  .text-display {
+    font-size: clamp(3.5rem, 8vw, 7rem);
+    font-weight: 900;
+    line-height: 0.92;
+    letter-spacing: -0.03em;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #060608;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(52, 211, 153, 0.3);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(52, 211, 153, 0.5);
+  }
+
+  /* Selection */
+  ::selection {
+    background: rgba(52, 211, 153, 0.25);
+    color: white;
+  }
+
   .mobile-container {
     @apply max-w-full overflow-x-hidden;
   }
-  
-  /* Mobile-friendly spacing */
-  .mobile-padding {
-    @apply px-4 sm:px-6 md:px-8;
-  }
-  
-  /* Ensure full height on mobile */
   .mobile-full-height {
     min-height: 100vh;
     min-height: -webkit-fill-available;
   }
 }
 
+/* ── Animations ── */
 @theme inline {
   @keyframes marquee {
-  from {
-    transform: translateX(0);
-    }
-  to {
-    transform: translateX(calc(-100% - var(--gap)));
-    }
+    from { transform: translateX(0); }
+    to   { transform: translateX(calc(-100% - var(--gap, 0px))); }
   }
   @keyframes marquee-vertical {
-  from {
-    transform: translateY(0);
-    }
-  to {
-    transform: translateY(calc(-100% - var(--gap)));
-    }
+    from { transform: translateY(0); }
+    to   { transform: translateY(calc(-100% - var(--gap, 0px))); }
   }
 }

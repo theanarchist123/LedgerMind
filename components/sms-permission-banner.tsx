@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Capacitor } from "@capacitor/core"
+import { isMobilePlatform } from "@/lib/hooks/use-mobile-platform"
 import { SMSManager } from "@/lib/sms/sms-manager"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -22,8 +22,8 @@ export function SMSPermissionBanner() {
   }, [])
 
   const checkPermissions = async () => {
-    // Only show on native mobile platforms
-    if (!Capacitor.isNativePlatform()) {
+    // Only show on native mobile platforms (or Live Reload)
+    if (!isMobilePlatform()) {
       return
     }
 
@@ -74,7 +74,7 @@ export function SMSPermissionBanner() {
       </AlertTitle>
       <AlertDescription className="mt-2">
         <p className="text-xs sm:text-sm mb-3 break-words">
-          Enable automatic transaction tracking by connecting to your SMS messages. 
+          Enable automatic transaction tracking by connecting to your SMS messages.
           We'll only read transaction alerts from banks and payment apps.
         </p>
         <Button onClick={handleGrantPermissions} size="sm" className="w-full sm:w-auto text-xs sm:text-sm">

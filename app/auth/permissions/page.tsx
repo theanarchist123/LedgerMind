@@ -25,7 +25,11 @@ export default function PermissionsPage() {
 
   useEffect(() => {
     // Check if user already granted permission
-    checkExistingPermission()
+    checkExistingPermission().catch(err => {
+      console.error("Auto-check failed:", err);
+      // Don't set error here to avoid startling user immediately, 
+      // but ensure we stay on step 1
+    });
   }, [])
 
   const checkExistingPermission = async () => {
@@ -35,10 +39,16 @@ export default function PermissionsPage() {
       return
     }
 
-    const status = await SMSManager.checkPermission()
-    if (status.granted) {
-      setPermissionGranted(true)
-      setCurrentStep(2)
+    try {
+      const status = await SMSManager.checkPermission()
+      if (status.granted) {
+        setPermissionGranted(true)
+        setCurrentStep(2)
+      }
+    } catch (e: any) {
+      console.warn("Silent check failed:", e)
+      // We ignore this error for now so the user can manually request 
+      // (which will trigger the explicit error UI)
     }
   }
 
@@ -187,9 +197,14 @@ export default function PermissionsPage() {
               </div>
 
               {error && (
-                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 sm:p-4 flex items-start gap-2 text-xs sm:text-sm text-destructive">
-                  <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <span className="break-words">{error}</span>
+                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 sm:p-4 animate-in fade-in slide-in-from-bottom-2">
+                  <div className="flex items-start gap-2 text-xs sm:text-sm text-destructive font-medium mb-1">
+                    <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span className="break-words">Error: {error}</span>
+                  </div>
+                  <p className="text-[10px] text-destructive/80 ml-6 break-all font-mono bg-white/50 p-1 rounded">
+                    Debug Info: Ensure you ran `npx cap sync` and rebuilt the Android app.
+                  </p>
                 </div>
               )}
 
@@ -209,6 +224,27 @@ export default function PermissionsPage() {
                   size="lg"
                 >
                   Skip for Now
+                </Button>
+              </div>
+
+              {/* Debug Tools */}
+              <div className="pt-4 border-t mt-4">
+                <p className="text-xs text-muted-foreground mb-2 font-semibold flex justify-between">
+                  <span>Troubleshooting:</span>
+                  <span className="font-mono opacity-50">v2.1</span>
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto py-1 px-2 text-xs text-muted-foreground w-full justify-start"
+                  onClick={() => {
+                    setError("Checking plugin availability...");
+                    SMSManager.checkPermission()
+                      .then(res => setError(`Plugin OK. Status: ${JSON.stringify(res)}`))
+                      .catch(e => setError(`Plugin Error: ${e.message}`));
+                  }}
+                >
+                  🔍 Check Plugin Status
                 </Button>
               </div>
             </div>

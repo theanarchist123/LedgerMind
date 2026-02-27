@@ -1,29 +1,13 @@
-import { Capacitor } from "@capacitor/core"
-import { isTransactionSMS, parseTransactionSMS, getBankSenderIds } from "./transaction-parser"
-import type { SMSTransaction } from "./transaction-parser"
+import { isMobilePlatform } from "@/lib/hooks/use-mobile-platform"
 
-export interface SMSMessage {
-  id: string
-  address: string // Phone number/Sender ID
-  body: string
-  date: number // Timestamp in milliseconds
-}
+// ... imports
 
-export interface SMSPermissionStatus {
-  granted: boolean
-  canRequest: boolean
-}
-
-/**
- * SMS Manager for reading transaction messages
- * Works with Capacitor on Android (iOS doesn't allow SMS reading)
- */
 export class SMSManager {
   /**
-   * Check if app is running on native platform
+   * Check if app is running on native platform (or Live Reload)
    */
   static isNative(): boolean {
-    return Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android"
+    return isMobilePlatform()
   }
 
   /**
@@ -36,14 +20,15 @@ export class SMSManager {
 
     try {
       // Call custom plugin
-      const result = await Capacitor.Plugins.SMSReader.checkPermission()
+      const result = await SMSReader.checkPermission()
       return {
         granted: result.granted || false,
         canRequest: result.canRequest !== false,
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("[SMS] Permission check failed:", error)
-      return { granted: false, canRequest: true }
+      // Propagate the error so UI knows plugin failed (e.g. not implemented)
+      throw new Error(`Permission check failed: ${error.message || error}`)
     }
   }
 
@@ -57,11 +42,12 @@ export class SMSManager {
     }
 
     try {
-      const result = await Capacitor.Plugins.SMSReader.requestPermission()
+      const result = await SMSReader.requestPermission()
       return result.granted || false
-    } catch (error) {
+    } catch (error: any) {
       console.error("[SMS] Permission request failed:", error)
-      return false
+      // Throw error to be caught by UI
+      throw new Error(`Permission request failed: ${error.message || error}`)
     }
   }
 
@@ -89,7 +75,7 @@ export class SMSManager {
     const limit = options?.limit || 1000
 
     try {
-      const result = await Capacitor.Plugins.SMSReader.readMessages({
+      const result = await SMSReader.readMessages({
         startDate: startDate.getTime(),
         endDate: endDate.getTime(),
         limit,

@@ -3,12 +3,11 @@ import type { CapacitorConfig } from '@capacitor/cli'
 const config: CapacitorConfig = {
   appId: 'com.ledgermind.app',
   appName: 'LedgerMind',
-  webDir: '.next', // Not used when server.url is set
+  webDir: '.next',
   server: {
-    // Point to your hosted Next.js app (API routes work there)
-    url: process.env.CAPACITOR_SERVER_URL || 'https://ledger-mind-30.vercel.app',
-    androidScheme: 'https',
-    cleartext: true // Allow HTTP for local development
+    // Live Reload for development
+    url: 'http://192.168.0.104:3000',
+    cleartext: true
   },
   plugins: {
     SplashScreen: {
